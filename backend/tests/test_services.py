@@ -243,8 +243,6 @@ def test_public_synthetic_bootstrap_runs_plugin_not_platform_fixture(tmp_path, d
     settings = Settings(data_dir=tmp_path, database_path=tmp_path / 'qor.sqlite3', ai_provider='disabled',
                         engine_module='app.engine.service')
     with TestClient(create_app(settings)) as client:
-        client.app.state.store.put('dataset', DEMO_DATASET_ID, 'public',
-                                   {'backend': 'plugin', 'dataset': dataset.model_dump(mode='json')})
         headers = {'Authorization': 'Bearer ' + client.post('/api/sessions').json()['token']}
         response = client.post('/api/runs', headers=headers,
             json={'dataset_id': DEMO_DATASET_ID, 'supplier_id': 'systeme_electric', 'as_of': AS_OF.isoformat()})

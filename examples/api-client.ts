@@ -67,6 +67,6 @@ export class QorApi {
 // Example:
 // const api = new QorApi("http://127.0.0.1:8000");
 // const run = await api.json<{run_id: string}>("/api/runs", "POST", {
-//   dataset_id: "demo-platform-v1", supplier_id: "IEK", as_of: "2026-09-22"
+//   dataset_id: "demo-engine-v1", supplier_id: "systeme_electric", as_of: "2026-09-22"
 // });
 // const page = await api.json(`/api/runs/${run.run_id}/recommendations`);

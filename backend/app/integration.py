@@ -8,6 +8,28 @@ class EngineUnavailable(Exception):
     pass
 
 
+def validate_plugins(settings):
+    """Fail at startup, rather than advertise a configured but unusable module."""
+    for module_name, function in ((settings.engine_module, "calculate"),
+                                  (settings.importer_module, "import_dataset")):
+        if not module_name:
+            continue
+        try:
+            module = import_module(module_name)
+            if not callable(getattr(module, function, None)):
+                raise AttributeError(function)
+        except (ImportError, AttributeError) as exc:
+            raise EngineUnavailable(f"Cannot load {module_name}.{function}") from exc
+
+
+def bootstrap_datasets(settings):
+    """Only the bundled engine owns this versioned public synthetic dataset."""
+    if settings.engine_module == "app.engine.service":
+        from .engine.service import DEMO_DATASET_ID, demo_dataset
+        return [(DEMO_DATASET_ID, demo_dataset())]
+    return []
+
+
 def calculate(settings, dataset, params, backend):
     if backend == "fixture":
         result = demo.calculate(dataset, params)

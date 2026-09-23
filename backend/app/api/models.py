@@ -2,7 +2,7 @@ from datetime import date
 from typing import Literal
 from pydantic import Field
 from typing import Any
-from ..contracts import CalculationParameters, Model, Recommendation, Scenario
+from ..contracts import CalculationParameters, Model, Recommendation, Scenario, Shipment
 
 
 class RunRequest(CalculationParameters):
@@ -73,16 +73,60 @@ class DatasetList(Model):
     items: list[DatasetMeta]
 
 
+class ShipmentList(Model):
+    items: list[Shipment]
+
+
+class ImportSource(Model):
+    name: str
+    sha256: str
+
+
+class ImportResponse(Model):
+    import_id: str
+    status: Literal["queued", "running", "completed", "failed", "interrupted"]
+    progress: int = Field(default=0, ge=0, le=100)
+    fingerprint: str | None = None
+    created_at: str | None = None
+    dataset_id: str | None = None
+    error: str | None = None
+    files: list[ImportSource] = Field(default_factory=list)
+    deduplicated: bool = False
+
+
+class RunSummary(Model):
+    products: int
+    to_order: int
+    critical: int
+    needs_review: int
+
+
 class RunResponse(Model):
     run_id: str
-    summary: dict[str, int]
+    summary: RunSummary
     data_mode: Literal["real", "synthetic"]
     algorithm_version: str
     warnings: list[str]
 
 
+class RunDetail(RunResponse):
+    dataset_id: str
+    dataset_version: str
+    parameters: CalculationParameters
+    parent_run_id: str | None
+    created_at: str
+
+
+class ScenarioComparison(Model):
+    sku: str
+    before_qty: float | None
+    after_qty: float | None
+    before_stockout_date: date | None
+    after_stockout_date: date | None
+
+
 class ScenarioResponse(RunResponse):
-    comparison: list[dict[str, Any]]
+    comparison: list[ScenarioComparison]
 
 
 class RecommendationPage(Model):
@@ -90,7 +134,17 @@ class RecommendationPage(Model):
     total: int
     page: int
     page_size: int
-    summary: dict[str, int]
+    summary: RunSummary
+
+
+class ApiProblem(Model):
+    code: str
+    message: str
+    fields: list[Any] = Field(default_factory=list)
+
+
+class ErrorResponse(Model):
+    error: ApiProblem
 
 
 class OrderLine(Model):
