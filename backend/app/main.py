@@ -334,7 +334,7 @@ def create_app(settings=None, ai=None):
         if ds.mode == "real" and not settings.allow_real_ai:
             return {**fallback, "question": "Внешний ИИ для реальных данных отключён. Используйте поля сценария."}
         try:
-            parsed = await asyncio.wait_for(ai.parse_scenario(body.text, ids, body.selected_shipment_id), timeout=15)
+            parsed = await asyncio.wait_for(ai.parse_scenario(body.text, ids, body.selected_shipment_id), timeout=settings.ai_timeout_seconds)
             if parsed.needs_clarification:
                 return {"status": "generated", "provider": settings.ai_provider, "scenario": None, "needs_clarification": True, "question": parsed.question or "Уточните действие и партию."}
             changes = Scenario.model_validate(parsed.model_dump(exclude={"needs_clarification", "question"}))
@@ -361,7 +361,7 @@ def create_app(settings=None, ai=None):
         try:
             # Do not transmit file names, source rows, product names or raw sales.
             facts = [{k: f[k] for k in ("id", "label", "value", "unit", "status")} for f in r["factors"]]
-            selected = await asyncio.wait_for(ai.explain_decision(facts, body.language), timeout=15)
+            selected = await asyncio.wait_for(ai.explain_decision(facts, body.language), timeout=settings.ai_timeout_seconds)
             known = {f["id"]: f for f in r["factors"]}
             if len(set(selected.factor_ids)) != len(selected.factor_ids) or any(i not in known for i in selected.factor_ids):
                 raise ValueError("Unknown or duplicate factor")

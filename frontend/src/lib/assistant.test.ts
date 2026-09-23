@@ -38,4 +38,18 @@ describe('assistant context', () => {
     expect(context.scenario).toContain('20');
     expect(context.products[0]).not.toHaveProperty('history');
   });
+  it('finds a raw 1C code and preserves order units, rounding and approval blockers', () => {
+    const rows = Array.from({ length: 100 }, (_, i) => ({
+      ...fixtureRows[0], sku: `iek/00${i}`, sku_1c: `00${i}`,
+      unit: 'бухта', stock_unit: 'м', stock_units_per_order_unit: 305,
+      moq: 2, order_step: 2, approval_blockers: ['unknown_incoming'],
+    }));
+    const context = makeChatContext(null, null, rows, null, '', 'Почему такой заказ по коду 0099?');
+    expect(context.products[0]).toMatchObject({
+      sku: 'iek/0099', sku_1c: '0099', unit: 'бухта', stock_unit: 'м',
+      stock_units_per_order_unit: 305, moq: 2, order_step: 2,
+      approval_blockers: ['unknown_incoming'],
+    });
+    expect(context.products[0].factors.length).toBeGreaterThan(0);
+  });
 });

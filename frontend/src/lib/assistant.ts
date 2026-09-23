@@ -9,6 +9,7 @@ export interface ChatAnswer {
   status: 'generated' | 'fallback';
   provider: string | null;
   notice: string;
+  error_code?: string | null;
 }
 export interface ChatMessage {
   id: string;
@@ -19,6 +20,7 @@ export interface ChatMessage {
 export interface AssistantStatus {
   configured: boolean;
   provider: string | null;
+  model?: string | null;
   allow_real_data: boolean;
 }
 
@@ -37,6 +39,7 @@ export function makeChatContext(
   const score = (row: Recommendation) =>
     (identifiers.has(row.supplier_article.toLocaleLowerCase()) ||
     identifiers.has(row.sku.toLocaleLowerCase()) ||
+    (row.sku_1c && identifiers.has(row.sku_1c.toLocaleLowerCase())) ||
     query.includes(row.name.toLocaleLowerCase())
       ? 100
       : 0) +
@@ -47,6 +50,7 @@ export function makeChatContext(
     .slice(0, 40)
     .map((row) => ({
       sku: row.sku,
+      sku_1c: row.sku_1c || row.sku,
       supplier_article: row.supplier_article,
       name: row.name,
       unit: row.unit,
@@ -56,6 +60,16 @@ export function makeChatContext(
       forecast_qty: row.forecast_qty,
       safety_stock: row.safety_stock,
       recommended_qty: row.data_status === 'missing' ? null : row.recommended_qty,
+      raw_need: row.raw_need,
+      stock_units_per_order_unit: row.stock_units_per_order_unit ?? null,
+      moq: row.moq ?? null,
+      order_step: row.order_step ?? null,
+      stockout_date: row.stockout_date,
+      coverage_days: row.coverage_days,
+      factors: row.factors.slice(0, 6).map(({ label, value }) => ({
+        label: label.slice(0, 120), value: value.slice(0, 200),
+      })),
+      approval_blockers: (row.approval_blockers || []).slice(0, 6).map((v) => v.slice(0, 300)),
       risk_status: row.risk_status,
       data_status: row.data_status,
       warnings: row.warnings.slice(0, 6).map((warning) => warning.slice(0, 500)),
@@ -82,8 +96,7 @@ export async function sendChat(
   history: ChatMessage[],
   context: ReturnType<typeof makeChatContext>,
 ): Promise<ChatAnswer> {
-  const send = async () =>
-    request<ChatAnswer>('/assistant/messages', {
+  const answer = await request<ChatAnswer>('/assistant/messages', {
       method: 'POST',
       headers: { Authorization: `Bearer ${await session()}` },
       body: JSON.stringify({
@@ -92,13 +105,6 @@ export async function sendChat(
         history: history.slice(-12).map(({ role, content }) => ({ role, content })),
       }),
     });
-  let answer: ChatAnswer;
-  try {
-    answer = await send();
-  } catch (error) {
-    if (!(error instanceof ApiError) || error.status !== 401) throw error;
-    answer = await send();
-  }
   if (
     !answer ||
     typeof answer.text !== 'string' ||

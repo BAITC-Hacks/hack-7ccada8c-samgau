@@ -23,6 +23,14 @@ def payload(message='Почему такой заказ для ATN000343?'):
     }}
 
 
+def provider_response(answer):
+    return httpx.Response(200, json={'status': 'completed', 'output': [
+        {'type': 'reasoning', 'summary': []},
+        {'type': 'message', 'role': 'assistant', 'content': [
+            {'type': 'output_text', 'text': json.dumps(answer)}]},
+    ]})
+
+
 def settings(tmp_path, **overrides):
     return Settings(data_dir=tmp_path, database_path=None, ai_provider='openai',
                     ai_key='test-key-not-real', ai_model='test-model',
@@ -38,20 +46,23 @@ def test_generated_answer_uses_bounded_screen_and_knowledge(tmp_path):
     def provider(req):
         body = json.loads(req.content)
         sent.append(body)
-        return httpx.Response(200, json={'choices': [{'finish_reason': 'stop', 'message': {'content': json.dumps({
+        assert req.url.path == '/v1/responses'
+        return provider_response({
             'text': 'Рекомендовано 156 шт. Откройте паспорт решения.',
             'destinations': ['recommendations'], 'source_skus': ['sku-1'],
-        })}}]})
+        })
     s = settings(tmp_path)
     with TestClient(create_app(s, AIAdapter(s, httpx.MockTransport(provider)))) as client:
         response = client.post('/api/assistant/messages', headers=headers(client), json=payload())
         assert response.status_code == 200, response.text
         assert response.json()['status'] == 'generated'
         assert response.json()['source_skus'] == ['sku-1']
-    facts = json.loads(sent[0]['messages'][1]['content'])
+    facts = json.loads(sent[0]['input'][0]['content'])
     assert facts['current_screen']['products'][0]['recommended_qty'] == 156
     assert 'recommendations' in facts['knowledge']
-    assert sent[0]['response_format']['type'] == 'json_schema'
+    assert sent[0]['text']['format']['type'] == 'json_schema'
+    assert sent[0]['store'] is False
+    assert sent[0]['max_output_tokens'] == 4096
     assert 'test-key-not-real' not in json.dumps(facts)
 
 
@@ -62,7 +73,7 @@ def test_generated_answer_uses_bounded_screen_and_knowledge(tmp_path):
 ])
 def test_invalid_provider_answer_is_never_shown_as_ai(tmp_path, bad_answer):
     s = settings(tmp_path)
-    transport = httpx.MockTransport(lambda req: httpx.Response(200, json={'choices': [{'finish_reason': 'stop', 'message': {'content': json.dumps(bad_answer)}}]}))
+    transport = httpx.MockTransport(lambda req: provider_response(bad_answer))
     with TestClient(create_app(s, AIAdapter(s, transport))) as client:
         answer = client.post('/api/assistant/messages', headers=headers(client), json=payload()).json()
         assert answer['status'] == 'fallback'
@@ -119,3 +130,74 @@ def test_provider_timeout_returns_labelled_fallback(tmp_path):
         answer = client.post('/api/assistant/messages', headers=headers(client), json=payload()).json()
         assert answer['status'] == 'fallback'
         assert 'ИИ не ответил' in answer['notice']
+
+
+@pytest.mark.parametrize('status, provider_code, expected', [
+    (401, 'invalid_api_key', 'authentication'),
+    (403, 'access_denied', 'access_denied'),
+    (404, 'model_not_found', 'model_unavailable'),
+    (429, 'insufficient_quota', 'quota_exceeded'),
+    (429, 'rate_limit_exceeded', 'rate_limit'),
+    (500, 'server_error', 'provider_unavailable'),
+])
+def test_provider_errors_are_actionable_without_leaking_credentials(tmp_path, status, provider_code, expected):
+    s = settings(tmp_path)
+    transport = httpx.MockTransport(lambda req: httpx.Response(status, json={
+        'error': {'code': provider_code, 'message': 'Echoed secret: ' + s.ai_key},
+    }))
+    with TestClient(create_app(s, AIAdapter(s, transport))) as client:
+        response = client.post('/api/assistant/messages', headers=headers(client), json=payload())
+        assert response.json()['status'] == 'fallback'
+        assert response.json()['error_code'] == expected
+        assert s.ai_key not in response.text
+
+
+@pytest.mark.parametrize('output', [
+    {'status': 'incomplete', 'output': []},
+    {'status': 'completed', 'output': [{'type': 'message', 'role': 'assistant',
+                                      'content': [{'type': 'refusal', 'refusal': 'No'}]}]},
+])
+def test_incomplete_and_refused_responses_are_not_presented_as_generated(tmp_path, output):
+    s = settings(tmp_path)
+    with TestClient(create_app(s, AIAdapter(s, httpx.MockTransport(lambda req: httpx.Response(200, json=output))))) as client:
+        answer = client.post('/api/assistant/messages', headers=headers(client), json=payload()).json()
+        assert answer['status'] == 'fallback'
+
+
+def test_nvidia_keeps_chat_completions_and_json_mode(tmp_path):
+    s = settings(tmp_path)
+    s.ai_provider, s.ai_format = 'nvidia', 'json_object'
+    def provider(req):
+        body = json.loads(req.content)
+        assert req.url.path == '/v1/chat/completions'
+        assert body['response_format'] == {'type': 'json_object'}
+        assert 'store' not in body
+        return httpx.Response(200, json={'choices': [{'finish_reason': 'stop', 'message': {'content': json.dumps({
+            'text': 'Откройте план закупок.', 'destinations': ['recommendations'], 'source_skus': [],
+        })}}]})
+    with TestClient(create_app(s, AIAdapter(s, httpx.MockTransport(provider)))) as client:
+        answer = client.post('/api/assistant/messages', headers=headers(client), json=payload()).json()
+        assert answer['status'] == 'generated'
+        assert answer['provider'] == 'nvidia'
+
+
+def test_enabled_real_data_passes_units_factors_and_blockers(tmp_path):
+    s = settings(tmp_path, allow_real_ai=True)
+    s.ai_model = 'gpt-6-luna'
+    def provider(req):
+        body = json.loads(req.content)
+        assert body['reasoning'] == {'effort': 'low'}
+        p = json.loads(body['input'][0]['content'])['current_screen']['products'][0]
+        assert (p['unit'], p['stock_unit'], p['stock_units_per_order_unit']) == ('бухта', 'м', 305)
+        assert p['factors'][0]['label'] == 'Сезонность'
+        assert p['approval_blockers'] == ['unknown_moq']
+        return provider_response({'text': 'Проверьте минимальный заказ.', 'destinations': ['quality'], 'source_skus': ['sku-1']})
+    body = payload()
+    body['context']['data_mode'] = 'real'
+    body['context']['products'][0].update(unit='бухта', stock_unit='м', stock_units_per_order_unit=305,
+        factors=[{'label': 'Сезонность', 'value': '1.2'}], approval_blockers=['unknown_moq'])
+    with TestClient(create_app(s, AIAdapter(s, httpx.MockTransport(provider)))) as client:
+        status = client.get('/api/assistant/status').json()
+        assert status['model'] == 'gpt-6-luna'
+        assert s.ai_key not in json.dumps(status)
+        assert client.post('/api/assistant/messages', headers=headers(client), json=body).json()['status'] == 'generated'

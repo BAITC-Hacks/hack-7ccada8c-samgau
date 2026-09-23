@@ -163,9 +163,9 @@ def test_real_adapter_http_shape_and_validation(settings, bad_response):
         body = json.loads(request.content)
         captured.append(body)
         assert request.headers["Authorization"] == "Bearer dummy-key"
-        assert body["response_format"]["type"] == "json_schema"
+        assert body["text"]["format"]["type"] == "json_schema"
         obj = {"shipment_id": "malicious-id" if bad_response else "demo-shipment-1", "delay_days": 7, "demand_change_pct": 20, "needs_clarification": False, "question": None}
-        return httpx.Response(200, json={"choices": [{"finish_reason": "stop", "message": {"content": json.dumps(obj)}}]})
+        return httpx.Response(200, json={"status": "completed", "output": [{"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": json.dumps(obj)}]}]})
     settings.ai_provider, settings.ai_key, settings.ai_model = "openai", "dummy-key", "test-model"
     with TestClient(create_app(settings, AIAdapter(settings, httpx.MockTransport(handler)))) as c:
         h = auth(c)
@@ -181,7 +181,7 @@ def test_ai_unknown_factors_fallback_and_valid_cache(settings):
     def handler(request):
         calls.append(1)
         ids = ["invented"] if len(calls) == 1 else ["forecast"]
-        return httpx.Response(200, json={"choices": [{"finish_reason": "stop", "message": {"content": json.dumps({"factor_ids": ids})}}]})
+        return httpx.Response(200, json={"status": "completed", "output": [{"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": json.dumps({"factor_ids": ids})}]}]})
     settings.ai_provider, settings.ai_key, settings.ai_model = "openai", "dummy", "test"
     with TestClient(create_app(settings, AIAdapter(settings, httpx.MockTransport(handler)))) as c:
         h = auth(c)

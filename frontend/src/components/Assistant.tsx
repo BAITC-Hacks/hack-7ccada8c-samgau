@@ -145,7 +145,9 @@ export function Assistant({
             <h2>QOR помощник</h2>
             <p>
               {status?.configured
-                ? `ИИ · ${status.provider === 'nvidia' ? 'NVIDIA' : 'OpenAI'}`
+                ? dataset?.mode === 'real' && !status.allow_real_data
+                  ? 'Справка · ИИ для данных компании отключён'
+                  : `ИИ настроен · ${status.provider === 'nvidia' ? 'NVIDIA' : 'OpenAI'}${status.model ? ` · ${status.model}` : ''}`
                 : status
                   ? 'Справка доступна · ИИ не подключён'
                   : 'Подключение проверяется при отправке'}
@@ -263,6 +265,17 @@ export function Assistant({
                     </small>
                   </>
                 )}
+                {message.answer?.status === 'fallback' && message.answer.error_code &&
+                  !['not_configured', 'real_data_disabled'].includes(message.answer.error_code) &&
+                  message.id === messages.at(-1)?.id && (
+                    <button className="text-button" disabled={blocked}
+                      onClick={() => {
+                        const question = [...messages].reverse().find((item) => item.role === 'user');
+                        if (question) void submit(question.content);
+                      }}>
+                      Повторить запрос к ИИ <ArrowRight size={14} />
+                    </button>
+                  )}
               </div>
             </article>
           ))}
