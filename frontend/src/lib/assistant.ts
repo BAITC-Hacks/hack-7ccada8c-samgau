@@ -1,5 +1,6 @@
-import { ApiError, request, session } from './api';
+import { ApiError, request } from './api';
 import type { Dataset, Recommendation, Run, Scenario } from '../types';
+import { rowKey } from '../types';
 
 export type ChatDestination = 'overview' | 'recommendations' | 'quality' | 'scenario' | 'exchange';
 export interface ChatAnswer {
@@ -39,35 +40,40 @@ export function makeChatContext(
   const score = (row: Recommendation) =>
     (identifiers.has(row.supplier_article.toLocaleLowerCase()) ||
     identifiers.has(row.sku.toLocaleLowerCase()) ||
-    (row.sku_1c && identifiers.has(row.sku_1c.toLocaleLowerCase())) ||
     query.includes(row.name.toLocaleLowerCase())
       ? 100
       : 0) +
-    (row.sku === selectedSku ? 50 : 0) +
+    ((row.key || row.sku) === selectedSku ? 50 : 0) +
     (row.risk_status === 'critical' ? 20 : 0);
   const products = [...rows]
     .sort((a, b) => score(b) - score(a))
     .slice(0, 40)
     .map((row) => ({
       sku: row.sku,
-      sku_1c: row.sku_1c || row.sku,
+      source_key: rowKey(row),
+      sku_1c: row.sku,
       supplier_article: row.supplier_article,
       name: row.name,
       unit: row.unit,
       stock_unit: row.stock_unit || row.unit,
+      stock_units_per_order_unit: row.stock_units_per_order_unit ?? null,
+      supplier_id: row.supplier_id,
+      run_id: row.run_id || null,
       available_stock: row.available_stock,
       eligible_incoming: row.eligible_incoming,
       forecast_qty: row.forecast_qty,
       safety_stock: row.safety_stock,
-      recommended_qty: row.data_status === 'missing' ? null : row.recommended_qty,
+      recommended_qty: ['missing', 'blocked'].includes(row.data_status)
+        ? null
+        : row.recommended_qty,
       raw_need: row.raw_need,
-      stock_units_per_order_unit: row.stock_units_per_order_unit ?? null,
       moq: row.moq ?? null,
       order_step: row.order_step ?? null,
       stockout_date: row.stockout_date,
       coverage_days: row.coverage_days,
       factors: row.factors.slice(0, 6).map(({ label, value }) => ({
-        label: label.slice(0, 120), value: value.slice(0, 200),
+        label: label.slice(0, 120),
+        value: value.slice(0, 200),
       })),
       approval_blockers: (row.approval_blockers || []).slice(0, 6).map((v) => v.slice(0, 300)),
       risk_status: row.risk_status,
@@ -76,7 +82,9 @@ export function makeChatContext(
     }));
   return {
     data_mode: dataset?.mode || 'none',
-    run_id: run?.run_id || null,
+    run_id: null,
+    run_ids: Object.values(run?.supplier_runs || {}),
+    selected_supplier_id: rows.find((r) => (r.key || r.sku) === selectedSku)?.supplier_id || null,
     warehouse: dataset?.warehouse || 'Склад не выбран',
     as_of: dataset?.as_of || 'Не задана',
     total_products: rows.length,
@@ -86,7 +94,7 @@ export function makeChatContext(
     scenario: scenario
       ? `Поставщик: ${scenario.supplier_id}; задержка: ${scenario.delay_days} дн.; изменение спроса: ${scenario.demand_change_pct}%.`
       : 'Исходный расчёт, без сценария.',
-    selected_sku: selectedSku || null,
+    selected_sku: rows.find((r) => (r.key || r.sku) === selectedSku)?.sku || null,
     products,
   };
 }
@@ -97,14 +105,13 @@ export async function sendChat(
   context: ReturnType<typeof makeChatContext>,
 ): Promise<ChatAnswer> {
   const answer = await request<ChatAnswer>('/assistant/messages', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${await session()}` },
-      body: JSON.stringify({
-        message,
-        context,
-        history: history.slice(-12).map(({ role, content }) => ({ role, content })),
-      }),
-    });
+    method: 'POST',
+    body: JSON.stringify({
+      message,
+      context,
+      history: history.slice(-12).map(({ role, content }) => ({ role, content })),
+    }),
+  });
   if (
     !answer ||
     typeof answer.text !== 'string' ||

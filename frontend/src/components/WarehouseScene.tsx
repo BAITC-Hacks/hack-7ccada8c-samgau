@@ -9,12 +9,18 @@ import {
   RotateCcw,
   SlidersHorizontal,
 } from 'lucide-react';
-import type { Recommendation } from '../types';
+import { rowKey, type Recommendation } from '../types';
 import { number } from '../lib/format';
 import './WarehouseScene.css';
 
 function condition(row: Recommendation) {
-  if (row.available_stock === null || row.data_status === 'missing') return 'missing';
+  if (
+    row.available_stock === null ||
+    ['missing', 'blocked'].includes(row.data_status) ||
+    row.risk_status === 'unknown' ||
+    row.approval_blockers?.length
+  )
+    return 'missing';
   return row.risk_status;
 }
 const labels = {
@@ -46,7 +52,7 @@ export function WarehouseScene({
   const maxPage = Math.max(0, Math.ceil(filtered.length / 12) - 1);
   const currentPage = Math.min(page, maxPage);
   const visible = filtered.slice(currentPage * 12, currentPage * 12 + 12);
-  const selected = visible.find((row) => row.sku === selectedSku) || visible[0];
+  const selected = visible.find((row) => rowKey(row) === selectedSku) || visible[0];
   return (
     <section
       className={`panel warehouse ${expanded ? '' : 'warehouse-collapsed'}`}
@@ -117,12 +123,12 @@ export function WarehouseScene({
                   </div>
                   {visible.map((row, index) => (
                     <button
-                      key={row.sku}
-                      className={`warehouse-bin ${condition(row)} ${selected?.sku === row.sku ? 'is-selected' : ''}`}
+                      key={rowKey(row)}
+                      className={`warehouse-bin ${condition(row)} ${rowKey(selected) === rowKey(row) ? 'is-selected' : ''}`}
                       style={{ '--bin-height': `${46 + (index % 3) * 12}px` } as CSSProperties}
                       aria-label={`Секция ${row.supplier_article}: ${labels[condition(row)]}`}
-                      aria-pressed={selected?.sku === row.sku}
-                      onClick={() => setSelectedSku(row.sku)}
+                      aria-pressed={rowKey(selected) === rowKey(row)}
+                      onClick={() => setSelectedSku(rowKey(row))}
                     >
                       <span className="warehouse-bin-top">
                         <Box size={23} />
@@ -210,10 +216,8 @@ export function WarehouseScene({
                     <div className="warehouse-order">
                       <dt>К заказу по расчёту</dt>
                       <dd>
-                        {selected.data_status === 'missing'
-                          ? '—'
-                          : number(selected.recommended_qty)}{' '}
-                        <small>{selected.data_status !== 'missing' && selected.unit}</small>
+                        {condition(selected) === 'missing' ? '—' : number(selected.recommended_qty)}{' '}
+                        <small>{condition(selected) !== 'missing' && selected.unit}</small>
                       </dd>
                     </div>
                   </dl>

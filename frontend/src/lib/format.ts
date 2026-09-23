@@ -1,5 +1,5 @@
 import type { Recommendation } from '../types';
-export const number = (value: number | null, digits = 0) =>
+export const number = (value: number | null, digits = 3) =>
   value === null
     ? 'Нет данных'
     : new Intl.NumberFormat('ru-RU', { maximumFractionDigits: digits }).format(value);
@@ -10,8 +10,19 @@ export const date = (value: string) =>
     year: 'numeric',
   });
 export const supplierName = (id: string) =>
-  id === 'iek' ? 'IEK' : id === 'systeme' ? 'Systeme Electric' : 'Все поставщики';
-export const riskLabel = { critical: 'Дефицит', warning: 'Внимание', healthy: 'В норме' };
+  id.toLowerCase() === 'iek'
+    ? 'IEK'
+    : ['systeme', 'systeme_electric'].includes(id)
+      ? 'Systeme Electric'
+      : id === 'all'
+        ? 'Все поставщики'
+        : id;
+export const riskLabel = {
+  critical: 'Дефицит',
+  warning: 'Внимание',
+  healthy: 'В норме',
+  unknown: 'Риск неизвестен',
+};
 export function csvCell(value: unknown): string {
   const raw = String(value ?? '');
   const safe = /^[\s]*[=+@-]/.test(raw) ? "'" + raw : raw;

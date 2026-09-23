@@ -1,3 +1,4 @@
+import { rowKey } from '../types';
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
@@ -90,7 +91,7 @@ export function Assistant({
   useEffect(() => {
     if (active && messages.length) end.current?.scrollIntoView({ block: 'nearest' });
   }, [messages, pending, active]);
-  const selected = rows.find((row) => row.sku === selectedSku);
+  const selected = rows.find((row) => rowKey(row) === selectedSku);
   const blocked = pending || loading || messages.length >= 80;
   async function submit(question = input, isRetry = false) {
     const text = question.trim();
@@ -237,7 +238,7 @@ export function Assistant({
                       <div className="chat-sources">
                         <span>Данные из текущего расчёта</span>
                         {[...new Set(message.answer.source_skus)].map((sku) => {
-                          const product = rows.find((row) => row.sku === sku);
+                          const product = rows.find((row) => rowKey(row) === sku);
                           return product ? (
                             <button key={sku} onClick={() => onProduct(product)}>
                               <span>
@@ -245,7 +246,7 @@ export function Assistant({
                                 <small>{product.name}</small>
                               </span>
                               <span>
-                                {product.data_status === 'missing'
+                                {['missing', 'blocked'].includes(product.data_status)
                                   ? 'Проверить данные'
                                   : `К заказу: ${number(product.recommended_qty)} ${product.unit}`}
                               </span>
@@ -265,14 +266,20 @@ export function Assistant({
                     </small>
                   </>
                 )}
-                {message.answer?.status === 'fallback' && message.answer.error_code &&
+                {message.answer?.status === 'fallback' &&
+                  message.answer.error_code &&
                   !['not_configured', 'real_data_disabled'].includes(message.answer.error_code) &&
                   message.id === messages.at(-1)?.id && (
-                    <button className="text-button" disabled={blocked}
+                    <button
+                      className="text-button"
+                      disabled={blocked}
                       onClick={() => {
-                        const question = [...messages].reverse().find((item) => item.role === 'user');
+                        const question = [...messages]
+                          .reverse()
+                          .find((item) => item.role === 'user');
                         if (question) void submit(question.content);
-                      }}>
+                      }}
+                    >
                       Повторить запрос к ИИ <ArrowRight size={14} />
                     </button>
                   )}
@@ -389,7 +396,7 @@ export function Assistant({
           >
             <option value="">Весь склад</option>
             {rows.map((row) => (
-              <option key={row.sku} value={row.sku}>
+              <option key={rowKey(row)} value={rowKey(row)}>
                 {row.supplier_article} · {row.name}
               </option>
             ))}

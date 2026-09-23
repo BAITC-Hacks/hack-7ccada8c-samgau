@@ -263,7 +263,7 @@ export function summarize(rows: Recommendation[]): Summary {
   return {
     order_skus: rows.filter((r) => (r.recommended_qty ?? 0) > 0).length,
     risk_skus: rows.filter((r) => r.risk_status === 'critical').length,
-    anomaly_count: rows.reduce((sum, r) => sum + r.anomaly_count, 0),
+    anomaly_count: rows.reduce((sum, r) => sum + (r.anomaly_count ?? 0), 0),
     review_skus: rows.filter((r) => r.data_status === 'missing').length,
     total_skus: rows.length,
   };
@@ -474,9 +474,51 @@ export const demo: Gateway = {
       })
     )
       throw new Error('Проверьте количество и причину изменения.');
-    const draft: Draft = { draft_id: crypto.randomUUID(), version: 1, status: 'draft' };
+    const draft: Draft = {
+      draft_id: crypto.randomUUID(),
+      version: 1,
+      status: 'draft',
+      run_id: run,
+      supplier_id: supplier,
+      lines: lines.map((l) => ({
+        recommendation: rows.find((r) => r.sku === l.sku)!,
+        approved_qty: l.quantity,
+        reason: l.reason,
+      })),
+    };
     drafts.set(draft.draft_id, { draft, rows, lines: structuredClone(lines) });
     return draft;
+  },
+  patchDraft: async (id, version, changes) => {
+    const saved = drafts.get(id);
+    if (!saved || saved.draft.version !== version || saved.draft.status !== 'draft')
+      throw new Error('Версия черновика изменилась');
+    if (
+      changes.some(
+        (l) =>
+          !Number.isFinite(l.quantity) ||
+          l.quantity < 0 ||
+          l.reason.trim().length < 3 ||
+          !saved.rows.some((r) => r.sku === l.sku),
+      )
+    )
+      throw new Error('Проверьте количество и причину изменения.');
+    saved.lines = saved.lines.map((l) => changes.find((c) => c.sku === l.sku) || l);
+    saved.draft = {
+      ...saved.draft,
+      version: version + 1,
+      lines: saved.lines.map((l) => ({
+        recommendation: saved.rows.find((r) => r.sku === l.sku)!,
+        approved_qty: l.quantity,
+        reason: l.reason,
+      })),
+    };
+    return structuredClone(saved.draft);
+  },
+  getDraft: async (id) => {
+    const saved = drafts.get(id);
+    if (!saved) throw new Error('Черновик не найден');
+    return structuredClone(saved.draft);
   },
   approve: async (id, version) => {
     await pause();

@@ -4657,6 +4657,26 @@
             ],
             "title": "Run Id"
           },
+          "run_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Run Ids"
+          },
+          "selected_supplier_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Supplier Id"
+          },
           "warehouse": {
             "type": "string",
             "maxLength": 160,
@@ -4756,6 +4776,18 @@
             "maxLength": 120,
             "title": "Sku"
           },
+          "source_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Key"
+          },
           "sku_1c": {
             "anyOf": [
               {
@@ -4794,6 +4826,50 @@
               }
             ],
             "title": "Stock Unit"
+          },
+          "stock_units_per_order_unit": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Units Per Order Unit"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "approval_blockers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "Approval Blockers"
           },
           "available_stock": {
             "anyOf": [
@@ -4861,17 +4937,6 @@
             ],
             "title": "Raw Need"
           },
-          "stock_units_per_order_unit": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Stock Units Per Order Unit"
-          },
           "moq": {
             "anyOf": [
               {
@@ -4924,14 +4989,6 @@
             "type": "array",
             "maxItems": 6,
             "title": "Factors"
-          },
-          "approval_blockers": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "maxItems": 6,
-            "title": "Approval Blockers"
           },
           "risk_status": {
             "type": "string",

@@ -18,7 +18,9 @@ export function InventorySummary({
   ];
   rows.forEach((row) => {
     const index =
-      row.data_status === 'missing' || row.available_stock === null
+      ['missing', 'blocked'].includes(row.data_status) ||
+      row.risk_status === 'unknown' ||
+      row.available_stock === null
         ? 3
         : row.risk_status === 'critical'
           ? 2

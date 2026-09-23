@@ -1,94 +1,66 @@
-import { dataMessage } from './dataMessages';
 import type {
   Dataset,
   Draft,
+  DraftLine,
   Explanation,
   Gateway,
+  HistoryPoint,
   ProductDetail,
   Quality,
   Recommendation,
   Run,
-  Supplier,
+  Shipment,
   Summary,
 } from '../types';
-
+import { sessionToken } from './session';
 export class ApiError extends Error {
   constructor(
     message: string,
     public status = 0,
+    public fields: unknown[] = [],
   ) {
     super(message);
     this.name = 'ApiError';
   }
 }
-const TOKEN_KEY = 'qor-api-session-v1';
-let sessionPromise: Promise<string> | null = null;
-export function resetSession() {
-  sessionPromise = null;
-  try {
-    sessionStorage.removeItem(TOKEN_KEY);
-  } catch {
-    /* storage may be unavailable */
-  }
-}
-export function session(): Promise<string> {
-  if (!sessionPromise) {
-    let saved: string | null = null;
-    try {
-      saved = sessionStorage.getItem(TOKEN_KEY);
-    } catch {
-      /* memory-only session */
-    }
-    sessionPromise = saved
-      ? Promise.resolve(saved)
-      : request<{ token: string }>('/sessions', { method: 'POST' })
-          .then((r) => {
-            if (!r.token) throw new ApiError('Сервер не создал сессию.');
-            try {
-              sessionStorage.setItem(TOKEN_KEY, r.token);
-            } catch {
-              /* memory-only session */
-            }
-            return r.token;
-          })
-          .catch((e) => {
-            sessionPromise = null;
-            throw e;
-          });
-  }
-  return sessionPromise;
-}
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const headers = new Headers(options.headers);
+  if (path !== '/sessions' && path !== '/health' && path !== '/assistant/status')
+    headers.set(
+      'Authorization',
+      `Bearer ${await sessionToken(() => request('/sessions', { method: 'POST' }))}`,
+    );
+  if (!(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 120000);
+  const timer = setTimeout(
+    () => controller.abort(),
+    options.body instanceof FormData ? 120000 : 20000,
+  );
   try {
-    const headers = new Headers(options.headers);
-    if (!(options.body instanceof FormData)) headers.set('Content-Type', 'application/json');
-    if (path !== '/sessions' && !headers.has('Authorization'))
-      headers.set('Authorization', `Bearer ${await session()}`);
     const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api${path}`, {
       ...options,
       headers,
-      credentials: 'include',
       signal: controller.signal,
     });
     if (!res.ok) {
       let message = `Сервер вернул ошибку ${res.status}. Повторите попытку.`;
+      let fields: unknown[] = [];
       try {
         const body = await res.json();
         message =
-          body.message ||
           body.error?.message ||
+          body.message ||
           (typeof body.detail === 'string' ? body.detail : message);
+        fields = body.error?.fields || [];
       } catch {
-        /* safe HTTP fallback */
+        /* safe message */
       }
-      if (res.status === 401) {
-        resetSession();
+      if (res.status === 401)
         message =
-          'Сессия истекла. Обновите страницу. Для доступа к прежним данным нужна исходная действующая сессия.';
-      }
-      throw new ApiError(message, res.status);
+          'Сессия истекла. Сохранённые черновики оставлены без изменений. Начните новую сессию через кнопку в панели данных; доступ к прежним черновикам будет потерян.';
+      if (fields.length)
+        message += ` ${fields.map((f) => (typeof f === 'string' ? f : JSON.stringify(f))).join('; ')}`;
+      throw new ApiError(message, res.status, fields);
     }
     if (path.endsWith('/export.csv')) return (await res.blob()) as T;
     if (!res.headers.get('content-type')?.includes('application/json'))
@@ -98,7 +70,7 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     if (error instanceof ApiError) throw error;
     if (error instanceof Error && error.name === 'AbortError')
       throw new ApiError(
-        'Операция заняла больше двух минут. Проверьте состояние на сервере перед повтором.',
+        'Сервер не ответил вовремя. Проверьте сохранённое состояние перед повтором.',
       );
     throw new ApiError('Не удалось связаться с API. Проверьте, запущен ли сервер.');
   } finally {
@@ -107,243 +79,263 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
 }
 const post = <T>(path: string, body: unknown) =>
   request<T>(path, { method: 'POST', body: JSON.stringify(body) });
-const uiSupplier = (id: string): Exclude<Supplier, 'all'> =>
-  id.toLowerCase() === 'iek' ? 'iek' : 'systeme';
-type ServerRow = Omit<Recommendation, 'risk_status' | 'data_status' | 'factors' | 'supplier_id'> & {
-  supplier_id: string;
-  risk_status: 'ok' | 'critical' | 'warning' | 'unknown';
-  data_status: 'ready' | 'review' | 'blocked';
-  factors: { id: string; label: string; value: string | number | null; unit?: string }[];
-  explanation: string;
-  history: ProductDetail['history'];
+const enc = encodeURIComponent;
+type ServerSummary = { products: number; to_order: number; critical: number; needs_review: number };
+type ServerRun = {
+  run_id: string;
+  summary: ServerSummary;
+  algorithm_version: string;
+  warnings: string[];
+};
+type Group = {
+  dataset: string;
+  suppliers: Record<string, ServerRun>;
+  base: Record<string, ServerRun>;
+};
+type ServerRow = Omit<Recommendation, 'risk_status' | 'factors'> & {
+  risk_status: 'ok' | 'warning' | 'critical' | 'unknown';
+  factors: {
+    id: string;
+    label: string;
+    value: number | string | null;
+    unit: string | null;
+    status: string;
+    source: Recommendation['factors'][number]['source'];
+  }[];
+  history: HistoryPoint[];
   trajectory: {
     date: string;
     without_order: number | null;
     with_order: number | null;
-    incoming: number;
+    incoming: number | null;
   }[];
 };
-type ServerRun = {
-  run_id: string;
-  summary: { products: number; to_order: number; critical: number; needs_review: number };
-};
-type RunPart = { id: string; supplier: string; dataset: string; base?: string };
-const groups = new Map<string, RunPart[]>();
-const identities = new Map<string, { sku: string; supplier: string }>();
-const datasetCache = new Map<string, Dataset>();
-const zero = (): Summary => ({
-  order_skus: 0,
-  risk_skus: 0,
-  review_skus: 0,
-  total_skus: 0,
-  anomaly_count: 0,
-});
-function combine(parts: RunPart[], runs: ServerRun[]): Run {
-  const id = `view-${crypto.randomUUID()}`;
-  groups.set(id, parts);
+const groups = new Map<string, Group>();
+const datasets = new Map<string, Dataset>();
+function group(id: string): Group {
+  const g = groups.get(id);
+  if (!g) throw new ApiError('Расчёт не найден. Пересчитайте набор.');
+  return g;
+}
+function summary(s: ServerSummary): Summary {
+  return {
+    total_skus: s.products,
+    order_skus: s.to_order,
+    risk_skus: s.critical,
+    review_skus: s.needs_review,
+    anomaly_count: null,
+  };
+}
+function saveGroup(g: Group): Run {
+  const id = `group:${crypto.randomUUID()}`;
+  groups.set(id, g);
+  const sum = { products: 0, to_order: 0, critical: 0, needs_review: 0 };
+  for (const r of Object.values(g.suppliers))
+    for (const k of Object.keys(sum) as (keyof ServerSummary)[]) sum[k] += r.summary[k];
   return {
     run_id: id,
-    summary: runs.reduce(
-      (s, r) => ({
-        ...s,
-        order_skus: s.order_skus + r.summary.to_order,
-        risk_skus: s.risk_skus + r.summary.critical,
-        review_skus: s.review_skus + r.summary.needs_review,
-        total_skus: s.total_skus + r.summary.products,
-      }),
-      zero(),
-    ),
+    summary: summary(sum),
+    supplier_runs: Object.fromEntries(Object.entries(g.suppliers).map(([s, r]) => [s, r.run_id])),
   };
 }
-function parts(run: string): RunPart[] {
-  const value = groups.get(run);
-  if (!value) throw new ApiError('Расчёт устарел. Выполните расчёт заново.');
-  return value;
-}
-function product(run: string, key: string) {
-  const identity = identities.get(key);
-  const part = parts(run).find((p) => p.supplier === identity?.supplier);
-  if (!part || !identity) throw new ApiError('Товар отсутствует в расчёте.');
-  return { ...part, sku: identity.sku };
-}
-export function mapRow(r: ServerRow): Recommendation {
-  const key = `${r.supplier_id}/${r.sku}`;
-  identities.set(key, { sku: r.sku, supplier: r.supplier_id });
+function adapt(r: ServerRow, run: string): Recommendation {
   return {
     ...r,
-    sku: key,
-    sku_1c: r.sku,
-    supplier_id: uiSupplier(r.supplier_id),
-    category: r.category || 'Товар',
-    risk_status:
-      r.risk_status === 'ok' ? 'healthy' : r.risk_status === 'unknown' ? 'warning' : r.risk_status,
-    data_status:
-      r.data_status === 'blocked'
-        ? 'missing'
-        : r.data_status === 'review'
-          ? 'estimated'
-          : 'observed',
-    factors: r.factors.map((f) => ({
-      label: f.label,
-      value: f.value === null ? 'Нет данных' : `${f.value} ${f.unit || ''}`.trim(),
-    })),
-    warnings: [
-      ...r.warnings.map(dataMessage),
-      ...(r.approval_blockers || []).map((b) => `Заказ заблокирован: ${dataMessage(b)}`),
-    ],
-    anomaly_count: r.factors.some(
-      (f) => f.id === 'excluded_one_off_qty' && typeof f.value === 'number' && f.value > 0,
-    )
-      ? 1
-      : 0,
+    key: JSON.stringify([r.supplier_id, r.sku]),
+    run_id: run,
+    category: 'Категория не указана',
+    anomaly_count: null,
     coverage_days: null,
+    risk_status: r.risk_status === 'ok' ? 'healthy' : r.risk_status,
+    factors: r.factors.map((f) => ({
+      ...f,
+      raw_value: f.value,
+      value: f.value === null ? 'Нет данных' : `${f.value}${f.unit ? ` ${f.unit}` : ''}`,
+    })),
   };
 }
-async function allRows(id: string) {
-  const rows: ServerRow[] = [];
-  for (let page = 1; page <= 200; page++) {
-    const result = await request<{ items: ServerRow[]; total: number }>(
-      `/runs/${encodeURIComponent(id)}/recommendations?page=${page}&page_size=100`,
-    );
-    if (!Array.isArray(result.items) || !Number.isFinite(result.total))
-      throw new ApiError('Некорректный ответ рекомендаций.');
-    rows.push(...result.items);
-    if (rows.length >= result.total) return rows;
-    if (!result.items.length) throw new ApiError('Сервер вернул неполный список рекомендаций.');
-  }
-  throw new ApiError('Набор превышает лимит 20 000 товаров.');
+function target(id: string, key: string) {
+  const g = group(id);
+  const [supplier, sku] = JSON.parse(key) as [string, string];
+  const r = g.suppliers[supplier];
+  if (!r) throw new ApiError('Поставщик не найден в расчёте.');
+  return { g, supplier, sku, run: r };
 }
 export const api: Gateway = {
   datasets: async () => {
-    const data = await request<{ items: (Dataset & { warehouse_id: string })[] }>('/datasets');
-    if (!Array.isArray(data.items)) throw new ApiError('Некорректный список наборов.');
-    return data.items.map((d) => {
-      const result = { ...d, warehouse: d.warehouse_id };
-      datasetCache.set(d.id, result);
-      return result;
-    });
+    const response = await request<{ items: (Dataset & { warehouse_id: string })[] }>('/datasets');
+    if (!Array.isArray(response.items)) throw new ApiError('Некорректный список наборов.');
+    const items = response.items
+      .map((d) => ({ ...d, warehouse: d.warehouse_id }))
+      .sort((a, b) => Number(b.id === 'demo-engine-v1') - Number(a.id === 'demo-engine-v1'));
+    items.forEach((d) => datasets.set(d.id, d));
+    return items;
   },
   createRun: async (dataset, supplier, as_of) => {
-    if (!datasetCache.has(dataset)) await api.datasets();
-    const suppliers =
-      datasetCache
-        .get(dataset)
-        ?.supplier_ids?.filter((s) => supplier === 'all' || uiSupplier(s) === supplier) || [];
-    if (!suppliers.length) throw new ApiError('Поставщик отсутствует в наборе.');
-    const runs = [];
-    for (const s of suppliers)
-      runs.push(await post<ServerRun>('/runs', { dataset_id: dataset, supplier_id: s, as_of }));
-    return combine(
-      runs.map((r, i) => ({ id: r.run_id, supplier: suppliers[i], dataset })),
-      runs,
+    if (!datasets.has(dataset)) await api.datasets();
+    const d = datasets.get(dataset);
+    if (!d?.supplier_ids?.length) throw new ApiError('В наборе не указаны поставщики.');
+    const ids = supplier === 'all' ? d.supplier_ids : [supplier];
+    const entries = await Promise.all(
+      ids.map(
+        async (s) =>
+          [
+            s,
+            await post<ServerRun>('/runs', {
+              dataset_id: dataset,
+              supplier_id: s,
+              as_of,
+              lead_time_days: 14,
+              review_days: 7,
+              safety_days: 7,
+            }),
+          ] as const,
+      ),
     );
+    const suppliers = Object.fromEntries(entries);
+    return saveGroup({ dataset, suppliers, base: suppliers });
   },
-  recommendations: async (run) => {
-    const rows = (await Promise.all(parts(run).map((p) => allRows(p.id)))).flat().map(mapRow);
-    const summary = rows.reduce(
-      (s, r) => ({
-        ...s,
-        total_skus: s.total_skus + 1,
-        anomaly_count: s.anomaly_count + r.anomaly_count,
-        order_skus: s.order_skus + ((r.recommended_qty || 0) > 0 ? 1 : 0),
-        risk_skus: s.risk_skus + (r.risk_status === 'critical' ? 1 : 0),
-        review_skus: s.review_skus + (r.data_status !== 'observed' ? 1 : 0),
-      }),
-      zero(),
-    );
-    return { items: rows, total: rows.length, summary };
-  },
-  detail: async (run, key) => {
-    const p = product(run, key);
-    const r = await request<ServerRow>(`/runs/${p.id}/products/${encodeURIComponent(p.sku)}`);
-    const base = p.base
-      ? await request<ServerRow>(`/runs/${p.base}/products/${encodeURIComponent(p.sku)}`)
-      : r;
-    return {
-      sku: key,
-      history: r.history,
-      method: r.explanation,
-      projection: r.trajectory.map((t) => ({
-        date: t.date,
-        baseline: base.trajectory.find((b) => b.date === t.date)?.without_order ?? null,
-        scenario: t.without_order,
-        with_order: t.with_order,
-        incoming: t.incoming,
-      })),
-    };
-  },
-  quality: (dataset) => request<Quality>(`/datasets/${encodeURIComponent(dataset)}/quality`),
-  shipments: async (run) => {
-    const result = await request<{
-      items: { id: string; sku: string; supplier_id: string; eta: string; quantity: number }[];
-    }>(`/datasets/${parts(run)[0].dataset}/shipments`);
-    return result.items.map((s) => ({ ...s, supplier_id: uiSupplier(s.supplier_id) }));
-  },
-  scenario: async (run, values) => {
-    const list = parts(run);
-    const runs: ServerRun[] = [];
-    const next: RunPart[] = [];
-    for (const p of list) {
-      const applies = values.supplier_id === 'all' || uiSupplier(p.supplier) === values.supplier_id;
-      if (applies) {
-        if (values.delay_days && values.supplier_id === 'all')
-          throw new ApiError('Для задержки выберите поставщика и конкретную партию.');
-        const r = await post<ServerRun>(`/runs/${p.id}/scenario`, {
-          delay_days: values.delay_days,
-          demand_change_pct: values.demand_change_pct,
-          shipment_id: values.shipment_id || null,
-        });
-        runs.push(r);
-        next.push({ ...p, id: r.run_id, base: p.base || p.id });
-      } else {
-        runs.push(await request<ServerRun>(`/runs/${p.id}`));
-        next.push(p);
+  recommendations: async (id) => {
+    const g = group(id);
+    const items: Recommendation[] = [];
+    for (const r of Object.values(g.suppliers)) {
+      let page = 1,
+        total = Infinity,
+        count = 0;
+      while (count < total) {
+        const response = await request<{ items: ServerRow[]; total: number }>(
+          `/runs/${enc(r.run_id)}/recommendations?page=${page}&page_size=100`,
+        );
+        if (
+          !Array.isArray(response.items) ||
+          !Number.isFinite(response.total) ||
+          (!response.items.length && count < response.total)
+        )
+          throw new ApiError('Неполный список рекомендаций.');
+        total = response.total;
+        count += response.items.length;
+        items.push(...response.items.map((row) => adapt(row, r.run_id)));
+        page++;
+        if (page > 200 && count < total)
+          throw new ApiError('Набор превышает 20 000 позиций на поставщика.');
       }
     }
-    return combine(next, runs);
+    const sum = { products: 0, to_order: 0, critical: 0, needs_review: 0 };
+    for (const r of Object.values(g.suppliers))
+      for (const k of Object.keys(sum) as (keyof ServerSummary)[]) sum[k] += r.summary[k];
+    return { items, total: items.length, summary: summary(sum) };
   },
-  parseScenario: async (text, supplier, run, shipment) => {
-    if (!run) throw new ApiError('Сначала выполните расчёт.');
-    const p = parts(run).find((p) => uiSupplier(p.supplier) === supplier);
-    if (!p) throw new ApiError('Выберите одного поставщика для разбора сценария.');
-    const r = await post<{
-      scenario: { delay_days: number; demand_change_pct: number; shipment_id?: string };
-      question?: string;
-      needs_clarification: boolean;
-    }>('/scenarios/parse', { run_id: p.id, text, selected_shipment_id: shipment || null });
+  detail: async (id, key) => {
+    const { g, supplier, sku, run } = target(id, key);
+    const path = (r: string) => `/runs/${enc(r)}/products/${enc(sku)}`;
+    const row = await request<ServerRow>(path(run.run_id));
+    const baseline =
+      g.base[supplier].run_id === run.run_id
+        ? row
+        : await request<ServerRow>(path(g.base[supplier].run_id));
+    const byDate = new Map(baseline.trajectory.map((p) => [p.date, p.without_order]));
     return {
-      parameters: { ...r.scenario, supplier_id: supplier },
-      message: r.question,
-      needs_clarification: r.needs_clarification,
+      sku,
+      history: row.history,
+      projection: row.trajectory.map((p) => ({
+        date: p.date,
+        baseline: byDate.get(p.date) ?? null,
+        scenario: p.without_order,
+        with_order: p.with_order,
+        incoming: p.incoming,
+      })),
+      method: `Алгоритм ${run.algorithm_version}. Запасы и спрос: ${row.stock_unit}. Заказ: ${row.unit}; коэффициент ${row.stock_units_per_order_unit ?? 'неизвестен'} ${row.stock_unit}/${row.unit}. Горизонт: ${row.trajectory.length} дней.`,
+    } satisfies ProductDetail;
+  },
+  quality: async (dataset) => {
+    const q = await request<Quality & { warnings?: string[] }>(`/datasets/${enc(dataset)}/quality`);
+    return {
+      ...q,
+      source_count: q.source_count ?? null,
+      mapped_skus: q.mapped_skus ?? null,
+      issues: [
+        ...(q.issues || []),
+        ...(q.warnings || []).map((w, i) => ({
+          id: `warning-${i}`,
+          title: w,
+          detail: 'Предупреждение источника',
+          severity: 'warning' as const,
+          count: 1,
+        })),
+      ],
     };
   },
-  explain: async (run, key) => {
-    const p = product(run, key);
-    const r = await post<Explanation & { status: Explanation['mode'] }>(`/runs/${p.id}/explain`, {
-      sku: p.sku,
-      language: 'ru',
+  shipments: async (id) =>
+    (await request<{ items: Shipment[] }>(`/datasets/${enc(group(id).dataset)}/shipments`)).items,
+  scenario: async (id, values) => {
+    const g = group(id);
+    const suppliers = { ...g.base };
+    if (values.delay_days && (!values.shipment_id || values.supplier_id === 'all'))
+      throw new ApiError('Выберите поставщика и конкретную поставку для задержки.');
+    const ids = values.supplier_id === 'all' ? Object.keys(g.base) : [values.supplier_id];
+    for (const s of ids) {
+      if (!g.base[s]) throw new ApiError('Поставщик отсутствует в наборе.');
+      suppliers[s] = await post<ServerRun>(`/runs/${enc(g.base[s].run_id)}/scenario`, {
+        delay_days: values.delay_days,
+        demand_change_pct: values.demand_change_pct,
+        shipment_id: values.shipment_id || null,
+      });
+    }
+    return saveGroup({ ...g, suppliers });
+  },
+  parseScenario: async (text, supplier, id, shipment) => {
+    const g = group(id);
+    if (!g.base[supplier]) throw new ApiError('Выберите одного поставщика для разбора сценария.');
+    const r = await post<{
+      scenario: null | { shipment_id?: string; delay_days: number; demand_change_pct: number };
+      needs_clarification: boolean;
+      question: string;
+      status: string;
+      requires_confirmation: boolean;
+    }>('/scenarios/parse', {
+      text,
+      run_id: g.base[supplier].run_id,
+      selected_shipment_id: shipment || null,
     });
+    return {
+      parameters: {
+        ...(r.scenario || { delay_days: 0, demand_change_pct: 0 }),
+        supplier_id: supplier,
+      },
+      needs_clarification: r.needs_clarification || !r.scenario,
+      message: r.question,
+      status: r.status,
+      requires_confirmation: r.requires_confirmation,
+    };
+  },
+  explain: async (id, key) => {
+    const { run, sku } = target(id, key);
+    const r = await post<Explanation & { status: Explanation['mode'] }>(
+      `/runs/${enc(run.run_id)}/explain`,
+      { sku, language: 'ru' },
+    );
     return { ...r, mode: r.status };
   },
-  createDraft: async (run, supplier, lines) => {
-    const p = parts(run).find((p) => uiSupplier(p.supplier) === supplier);
-    if (!p) throw new ApiError('Поставщик отсутствует в расчёте.');
-    const skus = lines.map((l) => product(run, l.sku).sku);
-    let draft = await post<Draft>('/orders', { run_id: p.id, supplier_id: p.supplier, skus });
-    const changes = lines
-      .filter((l) => l.reason.trim())
-      .map((l) => ({ sku: product(run, l.sku).sku, approved_qty: l.quantity, reason: l.reason }));
-    if (changes.length)
-      draft = await request<Draft>(`/orders/${draft.draft_id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ version: draft.version, changes }),
-      });
-    return draft;
+  createDraft: async (id, supplier, lines) => {
+    const r = group(id).suppliers[supplier];
+    if (!r) throw new ApiError('Поставщик отсутствует в расчёте.');
+    return post<Draft>('/orders', {
+      run_id: r.run_id,
+      supplier_id: supplier,
+      skus: lines.map((l) => l.sku),
+    });
   },
-  approve: (id, version, acknowledge = false) =>
-    post<Draft>(`/orders/${encodeURIComponent(id)}/approve`, {
-      version,
-      acknowledge_warnings: acknowledge,
+  patchDraft: (id, version, lines: DraftLine[]) =>
+    request<Draft>(`/orders/${enc(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        version,
+        changes: lines.map((l) => ({ sku: l.sku, approved_qty: l.quantity, reason: l.reason })),
+      }),
     }),
-  exportDraft: (id) => request<Blob>(`/orders/${encodeURIComponent(id)}/export.csv`),
+  getDraft: (id) => request<Draft>(`/orders/${enc(id)}`),
+  listDrafts: async () => (await request<{ items: Draft[] }>('/orders')).items,
+  approve: (id, version, acknowledge = false) =>
+    post<Draft>(`/orders/${enc(id)}/approve`, { version, acknowledge_warnings: acknowledge }),
+  exportDraft: (id) => request<Blob>(`/orders/${enc(id)}/export.csv`),
 };

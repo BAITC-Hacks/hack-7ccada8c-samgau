@@ -11,3 +11,5 @@ frontend/dist
 frontend/.env*
 !frontend/.env.example
 dist
+frontend/test-results
+frontend/playwright-report

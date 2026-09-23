@@ -12,6 +12,7 @@ def check_chat(client, dataset, run):
                       'raw_need', 'stock_units_per_order_unit', 'moq', 'order_step',
                       'risk_status', 'data_status', 'approval_blockers')
     product = {key: row[key] for key in product_fields}
+    product.update(supplier_id=row['supplier_id'], run_id=run['run_id'])
     product['warnings'] = row['warnings'][:6]
     product['factors'] = [{'label': f['label'][:120], 'value': str(f['value'])[:200]} for f in row['factors'][:6]]
     context = {

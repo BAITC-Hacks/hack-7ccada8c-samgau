@@ -11,7 +11,7 @@ from app.main import create_app
 
 def payload(message='Почему такой заказ для ATN000343?'):
     return {'message': message, 'history': [], 'context': {
-        'data_mode': 'synthetic', 'run_id': 'screen-run', 'warehouse': 'Алматы',
+        'data_mode': 'synthetic', 'run_id': None, 'warehouse': 'Алматы',
         'as_of': '2026-09-22', 'total_products': 12, 'order_skus': 8,
         'risk_skus': 2, 'review_skus': 1, 'scenario': 'Без сценария',
         'selected_sku': 'sku-1', 'products': [{
@@ -201,3 +201,57 @@ def test_enabled_real_data_passes_units_factors_and_blockers(tmp_path):
         assert status['model'] == 'gpt-6-luna'
         assert s.ai_key not in json.dumps(status)
         assert client.post('/api/assistant/messages', headers=headers(client), json=body).json()['status'] == 'generated'
+
+
+def test_api_chat_resolves_units_and_enforces_run_isolation(tmp_path):
+    s = settings(tmp_path)
+    s.ai_provider = 'disabled'
+    with TestClient(create_app(s)) as client:
+        h = headers(client)
+        run = client.post('/api/runs', headers=h, json={
+            'dataset_id': 'demo-engine-v1', 'supplier_id': 'iek', 'as_of': '2026-09-22',
+        }).json()['run_id']
+        body = payload('Почему этот товар?')
+        body['context']['selected_sku'] = '00007'
+        body['context']['products'][0].update(sku='00007', supplier_id='iek', run_id=run,
+                                             unit='incorrect', stock_unit='incorrect', recommended_qty=999)
+        response = client.post('/api/assistant/messages', headers=h, json=body)
+        assert response.status_code == 200, response.text
+        assert '2 бухта' in response.json()['text']
+        assert 'incorrect' not in response.json()['text']
+        assert ' м' in response.json()['text']
+        assert client.post('/api/assistant/messages', headers=headers(client), json=body).status_code == 404
+        # A forged synthetic flag cannot send a private real run to the provider.
+        store = client.app.state.store
+        owner = store.session(h['Authorization'].removeprefix('Bearer '))
+        obj = store.get('run', run, owner)
+        obj['payload']['data_mode'] = 'real'
+        store.put('run', run, owner, obj['payload'], obj['version'])
+        answer = client.post('/api/assistant/messages', headers=h, json=body).json()
+        assert 'данных компании отключён' in answer['notice']
+
+
+def test_verified_chat_replaces_forged_calculation_fields(tmp_path):
+    s = settings(tmp_path)
+    def provider(req):
+        p = json.loads(json.loads(req.content)['input'][0]['content'])['current_screen']['products'][0]
+        assert p['raw_need'] == 480
+        assert p['moq'] == 0
+        assert p['order_step'] == 1
+        assert p['stock_units_per_order_unit'] == 305
+        assert p['name'] != 'Forged name'
+        assert p['factors'][0]['label'] != 'Forged factor'
+        assert p['warnings'] != ['Forged warning']
+        return provider_response({'text': 'Закажите 2 бухты.', 'destinations': [], 'source_skus': ['iek:00007']})
+    with TestClient(create_app(s, AIAdapter(s, httpx.MockTransport(provider)))) as client:
+        h = headers(client)
+        rid = client.post('/api/runs', headers=h, json={
+            'dataset_id': 'demo-engine-v1', 'supplier_id': 'iek', 'as_of': '2026-09-22',
+        }).json()['run_id']
+        body = payload()
+        body['context']['products'][0].update(sku='00007', supplier_id='iek', run_id=rid,
+            source_key='iek:00007', raw_need=99999, moq=999, order_step=999, name='Forged name',
+            factors=[{'label': 'Forged factor', 'value': '999'}], warnings=['Forged warning'])
+        answer = client.post('/api/assistant/messages', headers=h, json=body).json()
+        assert answer['status'] == 'generated'
+        assert answer['source_skus'] == ['iek:00007']

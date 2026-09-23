@@ -19,3 +19,8 @@ data/
 node_modules/
 frontend/dist/
 dist/
+
+frontend/test-results/
+frontend/playwright-report/
+
+.venv

@@ -3,9 +3,8 @@ WORKDIR /app
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend/ ./
-ENV VITE_DATA_MODE=api
+ENV VITE_DATA_MODE=api VITE_API_BASE_URL=
 RUN npm run build
-
 FROM caddy:2.10.2-alpine
 COPY deploy/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /app/dist /srv
