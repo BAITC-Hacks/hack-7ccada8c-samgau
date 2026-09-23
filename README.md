@@ -63,4 +63,5 @@ $$Recommended\_Qty = \max(0, \; Forecast\_Demand + Safety\_Stock - Current\_Stoc
 1. **Клонируйте репозиторий:**
    ```bash
    git clone [https://github.com/your-org/electrokomplekt-ai-procurement.git](https://github.com/your-org/electrokomplekt-ai-procurement.git)
-   cd electrokomplekt-ai-procurement
+   cd electrokomplekt-ai-procurement word
+   
