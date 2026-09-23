@@ -1,0 +1,2656 @@
+{
+  "dataset_id": "qor-synthetic-v1",
+  "data_mode": "synthetic",
+  "as_of": "2026-09-22",
+  "algorithm_version": "qor-mvp-1.0",
+  "label": "Демонстрационные данные; не являются данными поставщиков",
+  "items": [
+    {
+      "algorithm_version": "qor-mvp-1.0",
+      "as_of": "2026-09-22",
+      "supplier_id": "iek",
+      "sku": "00002",
+      "warehouse_id": "synthetic-almaty",
+      "unit": "шт",
+      "stock_unit": "шт",
+      "available_stock": 80.0,
+      "eligible_incoming": 50.0,
+      "forecast_qty": 252.0,
+      "safety_stock": 84.0,
+      "raw_need": 206.0,
+      "recommended_qty": 216.0,
+      "recommended_stock_qty": 216.0,
+      "risk_status": "expedite",
+      "stockout_date": "2026-10-03",
+      "data_status": "preliminary",
+      "factors": [
+        {
+          "id": "lead_time_days",
+          "value": 14.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "review_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "horizon_days",
+          "value": 21.0,
+          "unit": "day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "seasonality_01",
+          "value": 0.8,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_02",
+          "value": 0.8,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_03",
+          "value": 0.9,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_04",
+          "value": 0.9,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_05",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_06",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_07",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_08",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_09",
+          "value": 1.2,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_10",
+          "value": 1.2,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_11",
+          "value": 1.1,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_12",
+          "value": 1.1,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "base_daily_demand",
+          "value": 10.0,
+          "unit": "шт/day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "growth_multiplier",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "median_of_comparable_months",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "scenario_demand_pct",
+          "value": 0.0,
+          "unit": "percent",
+          "source": {
+            "origin": "user_scenario",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "excluded_one_off_qty",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "reconstructed_lost_demand",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "available_stock",
+          "value": 80.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "inventory_as_of",
+          "value": "2026-09-22",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "stock_units_per_order_unit",
+          "value": 1.0,
+          "unit": "шт/шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "moq",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "order_multiple",
+          "value": 12.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "shipment_eta:DEMO-SHIP-00002",
+          "value": "2026-09-27",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_shipment:DEMO-SHIP-00002",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_incoming",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "confirmed_dated_shipments",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "forecast_qty",
+          "value": 252.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_stock",
+          "value": 84.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "raw_need",
+          "value": 206.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_stock_qty",
+          "value": 216.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_qty",
+          "value": 216.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        }
+      ],
+      "warnings": [
+        "assumed_replenishment_policy",
+        "ordinary_delivery_too_late_requires_expedite",
+        "supplier_seasonality_is_sku_approximation",
+        "synthetic_demo_data"
+      ],
+      "approval_blockers": [],
+      "explanation": "Прогноз 252 шт, страховой запас 84, свободно 80, своевременные поступления 50. Потребность 206 шт; после перевода единиц, MOQ и кратности — 216 шт. Обычная поставка не успеет до дефицита; требуется ускорение или решение менеджера."
+    },
+    {
+      "algorithm_version": "qor-mvp-1.0",
+      "as_of": "2026-09-22",
+      "supplier_id": "iek",
+      "sku": "00005",
+      "warehouse_id": "synthetic-almaty",
+      "unit": "шт",
+      "stock_unit": "шт",
+      "available_stock": 80.0,
+      "eligible_incoming": 50.0,
+      "forecast_qty": 252.0,
+      "safety_stock": 84.0,
+      "raw_need": 206.0,
+      "recommended_qty": 216.0,
+      "recommended_stock_qty": 216.0,
+      "risk_status": "expedite",
+      "stockout_date": "2026-10-03",
+      "data_status": "preliminary",
+      "factors": [
+        {
+          "id": "lead_time_days",
+          "value": 14.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "review_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "horizon_days",
+          "value": 21.0,
+          "unit": "day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "seasonality_01",
+          "value": 0.8,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_02",
+          "value": 0.8,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_03",
+          "value": 0.9,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_04",
+          "value": 0.9,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_05",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_06",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_07",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_08",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_09",
+          "value": 1.2,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_10",
+          "value": 1.2,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_11",
+          "value": 1.1,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_12",
+          "value": 1.1,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "base_daily_demand",
+          "value": 10.0,
+          "unit": "шт/day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "growth_multiplier",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "median_of_comparable_months",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "scenario_demand_pct",
+          "value": 0.0,
+          "unit": "percent",
+          "source": {
+            "origin": "user_scenario",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "excluded_one_off_qty",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "reconstructed_lost_demand",
+          "value": 100.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "available_stock",
+          "value": 80.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "inventory_as_of",
+          "value": "2026-09-22",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "stock_units_per_order_unit",
+          "value": 1.0,
+          "unit": "шт/шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "moq",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "order_multiple",
+          "value": 12.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "shipment_eta:DEMO-SHIP-00005",
+          "value": "2026-09-27",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_shipment:DEMO-SHIP-00005",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_incoming",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "confirmed_dated_shipments",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "forecast_qty",
+          "value": 252.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_stock",
+          "value": 84.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "raw_need",
+          "value": 206.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_stock_qty",
+          "value": 216.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_qty",
+          "value": 216.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        }
+      ],
+      "warnings": [
+        "assumed_replenishment_policy",
+        "ordinary_delivery_too_late_requires_expedite",
+        "supplier_seasonality_is_sku_approximation",
+        "synthetic_demo_data"
+      ],
+      "approval_blockers": [],
+      "explanation": "Прогноз 252 шт, страховой запас 84, свободно 80, своевременные поступления 50. Потребность 206 шт; после перевода единиц, MOQ и кратности — 216 шт. Обычная поставка не успеет до дефицита; требуется ускорение или решение менеджера."
+    },
+    {
+      "algorithm_version": "qor-mvp-1.0",
+      "as_of": "2026-09-22",
+      "supplier_id": "iek",
+      "sku": "00007",
+      "warehouse_id": "synthetic-almaty",
+      "unit": "бухта",
+      "stock_unit": "м",
+      "available_stock": 0.0,
+      "eligible_incoming": 0.0,
+      "forecast_qty": 360.0,
+      "safety_stock": 120.0,
+      "raw_need": 480.0,
+      "recommended_qty": 2.0,
+      "recommended_stock_qty": 610.0,
+      "risk_status": "expedite",
+      "stockout_date": "2026-09-23",
+      "data_status": "preliminary",
+      "factors": [
+        {
+          "id": "lead_time_days",
+          "value": 14.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "review_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "horizon_days",
+          "value": 21.0,
+          "unit": "day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "seasonality_01",
+          "value": 0.8,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_02",
+          "value": 0.8,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_03",
+          "value": 0.9,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_04",
+          "value": 0.9,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_05",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_06",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_07",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_08",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_09",
+          "value": 1.2,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_10",
+          "value": 1.2,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_11",
+          "value": 1.1,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_12",
+          "value": 1.1,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "base_daily_demand",
+          "value": 14.285714285714286,
+          "unit": "м/day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "growth_multiplier",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "median_of_comparable_months",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "scenario_demand_pct",
+          "value": 0.0,
+          "unit": "percent",
+          "source": {
+            "origin": "user_scenario",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "excluded_one_off_qty",
+          "value": 0.0,
+          "unit": "м",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "reconstructed_lost_demand",
+          "value": 0.0,
+          "unit": "м",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "available_stock",
+          "value": 0.0,
+          "unit": "м",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "inventory_as_of",
+          "value": "2026-09-22",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "stock_units_per_order_unit",
+          "value": 305.0,
+          "unit": "м/бухта",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "moq",
+          "value": 0.0,
+          "unit": "бухта",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "order_multiple",
+          "value": 1.0,
+          "unit": "бухта",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_incoming",
+          "value": 0.0,
+          "unit": "м",
+          "source": {
+            "origin": "confirmed_dated_shipments",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "forecast_qty",
+          "value": 360.0,
+          "unit": "м",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_stock",
+          "value": 120.0,
+          "unit": "м",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "raw_need",
+          "value": 480.0,
+          "unit": "м",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_stock_qty",
+          "value": 610.0,
+          "unit": "м",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_qty",
+          "value": 2.0,
+          "unit": "бухта",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        }
+      ],
+      "warnings": [
+        "assumed_replenishment_policy",
+        "ordinary_delivery_too_late_requires_expedite",
+        "supplier_seasonality_is_sku_approximation",
+        "synthetic_demo_data"
+      ],
+      "approval_blockers": [],
+      "explanation": "Прогноз 360 м, страховой запас 120, свободно 0, своевременные поступления 0. Потребность 480 м; после перевода единиц, MOQ и кратности — 2 бухта. Обычная поставка не успеет до дефицита; требуется ускорение или решение менеджера."
+    },
+    {
+      "algorithm_version": "qor-mvp-1.0",
+      "as_of": "2026-09-22",
+      "supplier_id": "systeme_electric",
+      "sku": "00003",
+      "warehouse_id": "synthetic-almaty",
+      "unit": "шт",
+      "stock_unit": "шт",
+      "available_stock": 80.0,
+      "eligible_incoming": 50.0,
+      "forecast_qty": 252.0,
+      "safety_stock": 84.0,
+      "raw_need": 206.0,
+      "recommended_qty": 216.0,
+      "recommended_stock_qty": 216.0,
+      "risk_status": "expedite",
+      "stockout_date": "2026-10-03",
+      "data_status": "preliminary",
+      "factors": [
+        {
+          "id": "lead_time_days",
+          "value": 14.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "review_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "horizon_days",
+          "value": 21.0,
+          "unit": "day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "seasonality_01",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_02",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_03",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_04",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_05",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_06",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_07",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_08",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_09",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_10",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_11",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_12",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "base_daily_demand",
+          "value": 10.0,
+          "unit": "шт/day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "growth_multiplier",
+          "value": 1.2,
+          "unit": "multiplier",
+          "source": {
+            "origin": "median_of_comparable_months",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "scenario_demand_pct",
+          "value": 0.0,
+          "unit": "percent",
+          "source": {
+            "origin": "user_scenario",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "excluded_one_off_qty",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "reconstructed_lost_demand",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "available_stock",
+          "value": 80.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "inventory_as_of",
+          "value": "2026-09-22",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "stock_units_per_order_unit",
+          "value": 1.0,
+          "unit": "шт/шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "moq",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "order_multiple",
+          "value": 12.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "shipment_eta:DEMO-SHIP-00003",
+          "value": "2026-09-27",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_shipment:DEMO-SHIP-00003",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_incoming",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "confirmed_dated_shipments",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "forecast_qty",
+          "value": 252.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_stock",
+          "value": 84.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "raw_need",
+          "value": 206.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_stock_qty",
+          "value": 216.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_qty",
+          "value": 216.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        }
+      ],
+      "warnings": [
+        "assumed_replenishment_policy",
+        "ordinary_delivery_too_late_requires_expedite",
+        "supplier_seasonality_is_sku_approximation",
+        "synthetic_demo_data"
+      ],
+      "approval_blockers": [],
+      "explanation": "Прогноз 252 шт, страховой запас 84, свободно 80, своевременные поступления 50. Потребность 206 шт; после перевода единиц, MOQ и кратности — 216 шт. Обычная поставка не успеет до дефицита; требуется ускорение или решение менеджера."
+    },
+    {
+      "algorithm_version": "qor-mvp-1.0",
+      "as_of": "2026-09-22",
+      "supplier_id": "systeme_electric",
+      "sku": "00008",
+      "warehouse_id": "synthetic-almaty",
+      "unit": "шт",
+      "stock_unit": "шт",
+      "available_stock": null,
+      "eligible_incoming": 0.0,
+      "forecast_qty": null,
+      "safety_stock": null,
+      "raw_need": null,
+      "recommended_qty": null,
+      "recommended_stock_qty": null,
+      "risk_status": "unknown",
+      "stockout_date": null,
+      "data_status": "insufficient",
+      "factors": [
+        {
+          "id": "lead_time_days",
+          "value": 14.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "review_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "horizon_days",
+          "value": 21.0,
+          "unit": "day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "seasonality_01",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_02",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_03",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_04",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_05",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_06",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_07",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_08",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_09",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_10",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_11",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_12",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "base_daily_demand",
+          "value": null,
+          "unit": "шт/day",
+          "source": {
+            "origin": "engine",
+            "status": "missing"
+          }
+        },
+        {
+          "id": "growth_multiplier",
+          "value": null,
+          "unit": "multiplier",
+          "source": {
+            "origin": "no_complete_history",
+            "status": "missing"
+          }
+        },
+        {
+          "id": "scenario_demand_pct",
+          "value": 0.0,
+          "unit": "percent",
+          "source": {
+            "origin": "user_scenario",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "excluded_one_off_qty",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "reconstructed_lost_demand",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "available_stock",
+          "value": null,
+          "unit": "шт",
+          "source": {
+            "origin": "missing",
+            "status": "missing"
+          }
+        },
+        {
+          "id": "inventory_as_of",
+          "value": null,
+          "unit": "date",
+          "source": {
+            "origin": "missing",
+            "status": "missing"
+          }
+        },
+        {
+          "id": "stock_units_per_order_unit",
+          "value": 1.0,
+          "unit": "шт/шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "moq",
+          "value": null,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "order_multiple",
+          "value": null,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_incoming",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "confirmed_dated_shipments",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "forecast_qty",
+          "value": null,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "missing"
+          }
+        },
+        {
+          "id": "safety_stock",
+          "value": null,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "missing"
+          }
+        },
+        {
+          "id": "raw_need",
+          "value": null,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "missing"
+          }
+        },
+        {
+          "id": "recommended_stock_qty",
+          "value": null,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "missing"
+          }
+        },
+        {
+          "id": "recommended_qty",
+          "value": null,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "missing"
+          }
+        }
+      ],
+      "warnings": [
+        "assumed_replenishment_policy",
+        "customer_detail_missing",
+        "insufficient_demand_history",
+        "short_order_history_no_confident_outlier_detection",
+        "supplier_seasonality_is_sku_approximation",
+        "synthetic_demo_data"
+      ],
+      "approval_blockers": [
+        "current_available_stock_missing",
+        "insufficient_demand_history",
+        "order_rules_missing"
+      ],
+      "explanation": "Расчёт требует данных: current_available_stock_missing, insufficient_demand_history, order_rules_missing."
+    },
+    {
+      "algorithm_version": "qor-mvp-1.0",
+      "as_of": "2026-09-22",
+      "supplier_id": "systeme_electric",
+      "sku": "00001",
+      "warehouse_id": "synthetic-almaty",
+      "unit": "шт",
+      "stock_unit": "шт",
+      "available_stock": 80.0,
+      "eligible_incoming": 50.0,
+      "forecast_qty": 210.0,
+      "safety_stock": 70.0,
+      "raw_need": 150.0,
+      "recommended_qty": 156.0,
+      "recommended_stock_qty": 156.0,
+      "risk_status": "stockout",
+      "stockout_date": "2026-10-06",
+      "data_status": "preliminary",
+      "factors": [
+        {
+          "id": "lead_time_days",
+          "value": 14.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "review_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "horizon_days",
+          "value": 21.0,
+          "unit": "day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "seasonality_01",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_02",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_03",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_04",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_05",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_06",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_07",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_08",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_09",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_10",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_11",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_12",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "base_daily_demand",
+          "value": 10.0,
+          "unit": "шт/day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "growth_multiplier",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "median_of_comparable_months",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "scenario_demand_pct",
+          "value": 0.0,
+          "unit": "percent",
+          "source": {
+            "origin": "user_scenario",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "excluded_one_off_qty",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "reconstructed_lost_demand",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "available_stock",
+          "value": 80.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "inventory_as_of",
+          "value": "2026-09-22",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "stock_units_per_order_unit",
+          "value": 1.0,
+          "unit": "шт/шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "moq",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "order_multiple",
+          "value": 12.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "shipment_eta:DEMO-SHIP-00001",
+          "value": "2026-09-27",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_shipment:DEMO-SHIP-00001",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_incoming",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "confirmed_dated_shipments",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "forecast_qty",
+          "value": 210.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_stock",
+          "value": 70.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "raw_need",
+          "value": 150.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_stock_qty",
+          "value": 156.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_qty",
+          "value": 156.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        }
+      ],
+      "warnings": [
+        "assumed_replenishment_policy",
+        "supplier_seasonality_is_sku_approximation",
+        "synthetic_demo_data"
+      ],
+      "approval_blockers": [],
+      "explanation": "Прогноз 210 шт, страховой запас 70, свободно 80, своевременные поступления 50. Потребность 150 шт; после перевода единиц, MOQ и кратности — 156 шт."
+    },
+    {
+      "algorithm_version": "qor-mvp-1.0",
+      "as_of": "2026-09-22",
+      "supplier_id": "systeme_electric",
+      "sku": "00004",
+      "warehouse_id": "synthetic-almaty",
+      "unit": "шт",
+      "stock_unit": "шт",
+      "available_stock": 80.0,
+      "eligible_incoming": 50.0,
+      "forecast_qty": 210.0,
+      "safety_stock": 70.0,
+      "raw_need": 150.0,
+      "recommended_qty": 156.0,
+      "recommended_stock_qty": 156.0,
+      "risk_status": "stockout",
+      "stockout_date": "2026-10-06",
+      "data_status": "preliminary",
+      "factors": [
+        {
+          "id": "lead_time_days",
+          "value": 14.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "review_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "horizon_days",
+          "value": 21.0,
+          "unit": "day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "seasonality_01",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_02",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_03",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_04",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_05",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_06",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_07",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_08",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_09",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_10",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_11",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_12",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "base_daily_demand",
+          "value": 10.0,
+          "unit": "шт/day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "growth_multiplier",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "median_of_comparable_months",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "scenario_demand_pct",
+          "value": 0.0,
+          "unit": "percent",
+          "source": {
+            "origin": "user_scenario",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "excluded_one_off_qty",
+          "value": 990.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "reconstructed_lost_demand",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "available_stock",
+          "value": 80.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "inventory_as_of",
+          "value": "2026-09-22",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "stock_units_per_order_unit",
+          "value": 1.0,
+          "unit": "шт/шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "moq",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "order_multiple",
+          "value": 12.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "shipment_eta:DEMO-SHIP-00004",
+          "value": "2026-09-27",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_shipment:DEMO-SHIP-00004",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_incoming",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "confirmed_dated_shipments",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "forecast_qty",
+          "value": 210.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_stock",
+          "value": 70.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "raw_need",
+          "value": 150.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_stock_qty",
+          "value": 156.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_qty",
+          "value": 156.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        }
+      ],
+      "warnings": [
+        "assumed_replenishment_policy",
+        "supplier_seasonality_is_sku_approximation",
+        "synthetic_demo_data"
+      ],
+      "approval_blockers": [],
+      "explanation": "Прогноз 210 шт, страховой запас 70, свободно 80, своевременные поступления 50. Потребность 150 шт; после перевода единиц, MOQ и кратности — 156 шт."
+    },
+    {
+      "algorithm_version": "qor-mvp-1.0",
+      "as_of": "2026-09-22",
+      "supplier_id": "systeme_electric",
+      "sku": "00006",
+      "warehouse_id": "synthetic-almaty",
+      "unit": "шт",
+      "stock_unit": "шт",
+      "available_stock": 80.0,
+      "eligible_incoming": 50.0,
+      "forecast_qty": 210.0,
+      "safety_stock": 70.0,
+      "raw_need": 150.0,
+      "recommended_qty": 156.0,
+      "recommended_stock_qty": 156.0,
+      "risk_status": "stockout",
+      "stockout_date": "2026-10-06",
+      "data_status": "preliminary",
+      "factors": [
+        {
+          "id": "lead_time_days",
+          "value": 14.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "review_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "horizon_days",
+          "value": 21.0,
+          "unit": "day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_days",
+          "value": 7.0,
+          "unit": "day",
+          "source": {
+            "origin": "synthetic_policy_not_supplier_contract",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "seasonality_01",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_02",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_03",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_04",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_05",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_06",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_07",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_08",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_09",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_10",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_11",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "seasonality_12",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "base_daily_demand",
+          "value": 10.0,
+          "unit": "шт/day",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "growth_multiplier",
+          "value": 1.0,
+          "unit": "multiplier",
+          "source": {
+            "origin": "median_of_comparable_months",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "scenario_demand_pct",
+          "value": 0.0,
+          "unit": "percent",
+          "source": {
+            "origin": "user_scenario",
+            "status": "assumed"
+          }
+        },
+        {
+          "id": "excluded_one_off_qty",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "reconstructed_lost_demand",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "available_stock",
+          "value": 80.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "inventory_as_of",
+          "value": "2026-09-22",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "stock_units_per_order_unit",
+          "value": 1.0,
+          "unit": "шт/шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "moq",
+          "value": 0.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "order_multiple",
+          "value": 12.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "shipment_eta:DEMO-SHIP-00006",
+          "value": "2026-09-29",
+          "unit": "date",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_shipment:DEMO-SHIP-00006",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "qor-synthetic-v1",
+            "status": "observed"
+          }
+        },
+        {
+          "id": "eligible_incoming",
+          "value": 50.0,
+          "unit": "шт",
+          "source": {
+            "origin": "confirmed_dated_shipments",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "forecast_qty",
+          "value": 210.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "safety_stock",
+          "value": 70.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "raw_need",
+          "value": 150.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_stock_qty",
+          "value": 156.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        },
+        {
+          "id": "recommended_qty",
+          "value": 156.0,
+          "unit": "шт",
+          "source": {
+            "origin": "engine",
+            "status": "estimated"
+          }
+        }
+      ],
+      "warnings": [
+        "assumed_replenishment_policy",
+        "supplier_seasonality_is_sku_approximation",
+        "synthetic_demo_data"
+      ],
+      "approval_blockers": [],
+      "explanation": "Прогноз 210 шт, страховой запас 70, свободно 80, своевременные поступления 50. Потребность 150 шт; после перевода единиц, MOQ и кратности — 156 шт."
+    }
+  ]
+}
