@@ -24,12 +24,13 @@ from .ai.adapter import AIAdapter, AIUnavailable
 from .ai.assistant import register_assistant
 from .api.models import ApproveOrder, CreateOrder, ExplainRequest, ParseRequest, PatchOrder, RunRequest
 from .api.models import DatasetList, ExplainResponse, HealthResponse, OrderList, OrderResponse, ParseResponse, RecommendationPage, RunResponse, ScenarioResponse, SessionResponse
+from .api.models import ErrorResponse, ImportResponse, RunDetail, ShipmentList
 from .config import Settings
 from .contracts import CalculationParameters, DatasetPayload, EngineResult, ImportFile, ImportRequest, Recommendation, Scenario
 from .orders import export_csv, validate_line
 from .storage import Conflict, Store
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 log = logging.getLogger("qor")
 bearer = HTTPBearer(auto_error=False)
 
@@ -54,15 +55,20 @@ def create_app(settings=None, ai=None):
 
     @asynccontextmanager
     async def lifespan(app):
+        integration.validate_plugins(settings)
         store.init()
         store.interrupt_imports()
         if not store.get("dataset", "demo-platform-v1", "public"):
             store.put("dataset", "demo-platform-v1", "public", {"backend": "fixture", "dataset": demo.dataset().model_dump(mode="json")})
+        for dataset_id, dataset in integration.bootstrap_datasets(settings):
+            if not store.get("dataset", dataset_id, "public"):
+                store.put("dataset", dataset_id, "public", {"backend": "plugin", "dataset": dataset.model_dump(mode="json")})
         yield
         if tasks:
             await asyncio.gather(*list(tasks), return_exceptions=True)
 
-    app = FastAPI(title="QOR AI — Captain API", version=VERSION, lifespan=lifespan, docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/openapi.json")
+    app = FastAPI(title="QOR AI — Backend API", version=VERSION, lifespan=lifespan, docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/openapi.json",
+                  responses={status: {"model": ErrorResponse} for status in (401, 403, 404, 409, 413, 422, 429, 500, 502, 503)})
     app.state.store = store
     app.state.settings = settings
     app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=False, allow_methods=["GET", "POST", "PATCH"], allow_headers=["Authorization", "Content-Type", "X-Admin-Token"], expose_headers=["Content-Disposition", "X-Request-ID"])
@@ -193,14 +199,15 @@ def create_app(settings=None, ai=None):
 
     @app.get("/api/datasets", tags=["data"], response_model=DatasetList)
     def datasets(owner=Depends(session)):
-        return {"items": [{"id": o["id"], **{k: o["payload"]["dataset"][k] for k in ("name", "mode", "as_of", "warehouse_id", "supplier_ids", "version")}, "engine_backend": o["payload"]["backend"]} for o in store.list("dataset", owner)]}
+        items = [{"id": o["id"], **{k: o["payload"]["dataset"][k] for k in ("name", "mode", "as_of", "warehouse_id", "supplier_ids", "version")}, "engine_backend": o["payload"]["backend"]} for o in store.list("dataset", owner)]
+        return {"items": sorted(items, key=lambda item: (item["engine_backend"] != "plugin", item["id"]))}
 
-    @app.get("/api/datasets/{dataset_id}/quality", tags=["data"])
+    @app.get("/api/datasets/{dataset_id}/quality", tags=["data"], response_model=dict)
     def quality(dataset_id: str, owner=Depends(session)):
         _, ds = dataset_for(dataset_id, owner)
         return ds.quality
 
-    @app.get("/api/datasets/{dataset_id}/shipments", tags=["data"])
+    @app.get("/api/datasets/{dataset_id}/shipments", tags=["data"], response_model=ShipmentList)
     def shipments(dataset_id: str, owner=Depends(session)):
         _, ds = dataset_for(dataset_id, owner)
         return {"items": ds.shipments}
@@ -224,7 +231,7 @@ def create_app(settings=None, ai=None):
             finally:
                 upload_lock.release()
 
-    @app.post("/api/imports", status_code=202, tags=["data"], dependencies=[Depends(admin)])
+    @app.post("/api/imports", status_code=202, tags=["data"], dependencies=[Depends(admin)], response_model=ImportResponse)
     async def start_import(files: list[UploadFile] = File(...), supplier: str = Form(...), mapping_version: str = Form(...), as_of: date = Form(...), warehouse_id: str = Form(...), owner=Depends(session)):
         if not settings.importer_module or not settings.engine_module:
             fail(503, "integration_missing", "Задайте IMPORTER_MODULE и ENGINE_MODULE")
@@ -235,8 +242,8 @@ def create_app(settings=None, ai=None):
         stored, size, retained = [], 0, False
         import_id = uuid4().hex
         directory = settings.data_dir / "uploads" / import_id
-        directory.mkdir(parents=True, exist_ok=True)
         try:
+            directory.mkdir(parents=True, exist_ok=True)
             seen = set()
             for file in files:
                 name = (file.filename or "").replace("\\", "/").split("/")[-1]
@@ -276,7 +283,7 @@ def create_app(settings=None, ai=None):
                 shutil.rmtree(directory, ignore_errors=True)
                 upload_lock.release()
 
-    @app.get("/api/imports/{import_id}", tags=["data"])
+    @app.get("/api/imports/{import_id}", tags=["data"], response_model=ImportResponse)
     def import_status(import_id: str, owner=Depends(session)):
         return {"import_id": import_id, **get("import", import_id, owner)["payload"]}
 
@@ -284,7 +291,7 @@ def create_app(settings=None, ai=None):
     def runs(body: RunRequest, owner=Depends(session)):
         return make_run(body.dataset_id, CalculationParameters.model_validate(body.model_dump(exclude={"dataset_id"})), owner)
 
-    @app.get("/api/runs/{run_id}", tags=["calculation"])
+    @app.get("/api/runs/{run_id}", tags=["calculation"], response_model=RunDetail)
     def run_detail(run_id: str, owner=Depends(session)):
         p = get("run", run_id, owner)["payload"]
         return {"run_id": run_id, **{k: v for k, v in p.items() if k != "result"}, "algorithm_version": p["result"]["algorithm_version"], "warnings": p["result"]["warnings"]}
@@ -425,7 +432,9 @@ def create_app(settings=None, ai=None):
         v = store.put("order", draft_id, owner, p, body.version)
         return {"draft_id": draft_id, "version": v, **p}
 
-    @app.get("/api/orders/{draft_id}/export.csv", tags=["orders"])
+    @app.get("/api/orders/{draft_id}/export.csv", tags=["orders"], response_class=Response,
+             responses={200: {"description": "Approved CSV, UTF-8 BOM, semicolon delimiter",
+                              "content": {"text/csv": {"schema": {"type": "string", "format": "binary"}}}}})
     def export(draft_id: str, owner=Depends(session)):
         obj = get("order", draft_id, owner)
         if obj["payload"]["status"] != "approved":
