@@ -1,5 +1,5 @@
 # hack-7ccada8c-samgau
-Hackathon team repository for Samgau
+Hackathon team repository for Samgau.
 
 # 📦 HACKALEM AI: Автоматический расчёт заказов поставщикам для ТОО «Электрокомплект»
 
