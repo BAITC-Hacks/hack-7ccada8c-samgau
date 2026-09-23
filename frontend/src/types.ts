@@ -4,17 +4,23 @@ export type Risk = 'critical' | 'warning' | 'healthy';
 export type DataStatus = 'observed' | 'estimated' | 'missing';
 export interface Recommendation {
   sku: string;
+  sku_1c?: string;
   supplier_id: Exclude<Supplier, 'all'>;
   supplier_article: string;
   name: string;
   category: string;
   unit: string;
+  stock_unit?: string;
+  stock_units_per_order_unit?: number | null;
+  moq?: number;
+  order_step?: number;
+  approval_blockers?: string[];
   available_stock: number | null;
-  eligible_incoming: number;
-  forecast_qty: number;
-  safety_stock: number;
-  raw_need: number;
-  recommended_qty: number;
+  eligible_incoming: number | null;
+  forecast_qty: number | null;
+  safety_stock: number | null;
+  raw_need: number | null;
+  recommended_qty: number | null;
   risk_status: Risk;
   stockout_date: string | null;
   data_status: DataStatus;
@@ -29,6 +35,7 @@ export interface Dataset {
   mode: 'real' | 'synthetic';
   as_of: string;
   warehouse: string;
+  supplier_ids?: string[];
 }
 export interface Summary {
   order_skus: number;
@@ -48,15 +55,15 @@ export interface Recommendations {
 }
 export interface HistoryPoint {
   month: string;
-  actual: number;
-  regular: number;
-  restored: number;
+  actual: number | null;
+  regular: number | null;
+  restored: number | null;
 }
 export interface StockPoint {
   date: string;
-  baseline: number;
-  scenario: number;
-  with_order: number;
+  baseline: number | null;
+  scenario: number | null;
+  with_order: number | null;
   incoming: number;
 }
 export interface ProductDetail {
@@ -111,9 +118,17 @@ export interface Gateway {
   detail: (run: string, sku: string) => Promise<ProductDetail>;
   quality: (dataset: string) => Promise<Quality>;
   scenario: (run: string, values: Scenario) => Promise<Run>;
-  parseScenario: (text: string, supplier: Supplier) => Promise<ParsedScenario>;
+  parseScenario: (
+    text: string,
+    supplier: Supplier,
+    run?: string,
+    shipment?: string,
+  ) => Promise<ParsedScenario>;
+  shipments?: (
+    run: string,
+  ) => Promise<{ id: string; sku: string; supplier_id: Supplier; eta: string; quantity: number }[]>;
   explain: (run: string, sku: string) => Promise<Explanation>;
   createDraft: (run: string, supplier: string, lines: DraftLine[]) => Promise<Draft>;
-  approve: (id: string, version: number) => Promise<Draft>;
+  approve: (id: string, version: number, acknowledge?: boolean) => Promise<Draft>;
   exportDraft: (id: string) => Promise<Blob>;
 }

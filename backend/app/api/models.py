@@ -159,6 +159,7 @@ class OrderResponse(Model):
     version: int
     run_id: str
     supplier_id: str
+    data_mode: Literal['real', 'synthetic'] | None = None
     status: Literal["draft", "approved"]
     as_of: date
     created_at: str

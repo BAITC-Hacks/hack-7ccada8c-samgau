@@ -19,7 +19,7 @@ describe('synthetic demo workflow', () => {
     });
     const before = await demo.detail(base.run_id, fixtureRows[0].sku);
     const after = await demo.detail(changed.run_id, fixtureRows[0].sku);
-    expect(after.projection[8].scenario).toBeLessThan(before.projection[8].scenario);
+    expect(after.projection[8].scenario).toBeLessThan(before.projection[8].scenario!);
     expect((await demo.recommendations(changed.run_id)).items[0].recommended_qty).toBe(156);
     expect((await demo.recommendations(base.run_id)).items[0].recommended_qty).toBe(156);
   });
