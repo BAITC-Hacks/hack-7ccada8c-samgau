@@ -96,14 +96,19 @@ def test_confirmed_inventory_csv_changes_the_calculation(source_files,tmp_path):
     assert after.available_stock==500
 
 
-def test_upload_calculation_approval_and_csv_roundtrip(source_files,tmp_path):
-    settings=Settings(data_dir=tmp_path/'server',admin_token='test-import-secret',ai_provider='disabled')
+@pytest.mark.parametrize('access', ['admin', 'session'])
+def test_upload_calculation_approval_and_csv_roundtrip(source_files,tmp_path,access):
+    settings=Settings(data_dir=tmp_path/'server',admin_token='test-import-secret',ai_provider='disabled',import_access=access)
     with TestClient(create_app(settings)) as c:
         headers={'Authorization':'Bearer '+c.post('/api/sessions').json()['token']}
         payload={'supplier':'systeme_electric','mapping_version':PROFILE,'as_of':'2026-09-22','warehouse_id':SCOPE}
         files=[('files',(f.original_name,f.path.read_bytes(),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) for f in source_files]
-        assert c.post('/api/imports',headers=headers,data=payload,files=files).status_code==403
-        r=c.post('/api/imports',headers={**headers,'X-Admin-Token':'test-import-secret'},data=payload,files=files)
+        if access=='admin':
+            assert c.post('/api/imports',headers=headers,data=payload,files=files).status_code==403
+        else:
+            assert c.post('/api/imports',data=payload,files=files).status_code==401
+        upload_headers={**headers,'X-Admin-Token':'test-import-secret'} if access=='admin' else headers
+        r=c.post('/api/imports',headers=upload_headers,data=payload,files=files)
         assert r.status_code==202,r.text
         job=r.json()
         for _ in range(100):

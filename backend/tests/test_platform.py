@@ -21,7 +21,7 @@ from app.storage import Conflict, Store
 
 @pytest.fixture
 def settings(tmp_path):
-    return Settings(data_dir=tmp_path, ai_provider="disabled", engine_module="", importer_module="", admin_token="test-admin")
+    return Settings(data_dir=tmp_path, ai_provider="disabled", engine_module="", importer_module="", admin_token="test-admin", import_access="admin")
 
 
 @pytest.fixture

@@ -15,8 +15,7 @@ export function ImportModal({
   onClose: () => void;
   onComplete: (id: string) => Promise<void>;
 }) {
-  const [token, setToken] = useState(''),
-    [supplier, setSupplier] = useState('systeme_electric'),
+  const [supplier, setSupplier] = useState('systeme_electric'),
     [date, setDate] = useState('2026-09-22'),
     [warehouse, setWarehouse] = useState('synthetic-almaty');
   const [files, setFiles] = useState<File[]>([]),
@@ -42,10 +41,8 @@ export function ImportModal({
       files.forEach((f) => form.append('files', f));
       let result = await request<Job>('/imports', {
         method: 'POST',
-        headers: { 'X-Admin-Token': token },
         body: form,
       });
-      setToken('');
       setJob(result);
       for (
         let attempt = 0;
@@ -77,16 +74,6 @@ export function ImportModal({
       }}
     >
       <label className="field-label">
-        Ключ администратора
-        <input
-          aria-label="Ключ администратора"
-          type="password"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          autoComplete="off"
-        />
-      </label>
-      <label className="field-label">
         Поставщик
         <select value={supplier} onChange={(e) => setSupplier(e.target.value)}>
           <option value="systeme_electric">Systeme Electric</option>
@@ -111,7 +98,7 @@ export function ImportModal({
       />
       <p className="small">
         Профиль qor-explicit-xlsx-v1. Произвольные выгрузки 1С требуют предварительного
-        сопоставления колонок. Ключ не сохраняется.
+        сопоставления колонок. Набор сохраняется в текущей сессии.
       </p>
       {job && (
         <p role="status">
@@ -126,7 +113,7 @@ export function ImportModal({
       <footer className="modal-footer">
         <button
           className="primary"
-          disabled={busy || files.length !== 6 || !token || !warehouse || !date}
+          disabled={busy || files.length !== 6 || !warehouse || !date}
           onClick={start}
         >
           Загрузить и проверить

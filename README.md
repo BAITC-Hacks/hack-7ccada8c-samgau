@@ -206,7 +206,7 @@ cp .env.example .env
 docker compose up --build -d
 ```
 
-На Windows: `copy .env.example .env`. Корневой Compose собирает **React + FastAPI + Caddy** на **http://localhost:8080**. Caddy обслуживает React и проксирует `/api`; база и загрузки сохраняются в томе `qor_data`. Для импорта задайте `ADMIN_TOKEN` в корневом `.env`.
+На Windows: `copy .env.example .env`. Корневой Compose собирает **React + FastAPI + Caddy** на **http://localhost:8080**. Caddy обслуживает React и проксирует `/api`; база и загрузки сохраняются в томе `qor_data`. По умолчанию импорт API защищён ключом (`IMPORT_ACCESS=admin`). Для разрешённой владельцем загрузки из интерфейса без ручного ключа предусмотрен `IMPORT_ACCESS=session`.
 
 Отдельный UI-контейнер:
 

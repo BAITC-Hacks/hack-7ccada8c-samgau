@@ -209,8 +209,8 @@ test('mobile API view', async ({ page }) => {
 
 test('browser imports six XLSX into its own Bearer session', async ({ page }) => {
   test.skip(
-    !process.env.QOR_ADMIN_TOKEN || !process.env.QOR_TEST_XLSX_DIR,
-    'Provide test-only admin token and generated XLSX directory',
+    !process.env.QOR_TEST_XLSX_DIR,
+    'Provide generated XLSX directory; server uses IMPORT_ACCESS=session',
   );
   const directory = process.env.QOR_TEST_XLSX_DIR!;
   const files = (await fs.readdir(directory))
@@ -220,7 +220,6 @@ test('browser imports six XLSX into its own Bearer session', async ({ page }) =>
   await ready(page);
   const token = await page.evaluate(() => sessionStorage.getItem('qor-bearer-session'));
   await page.getByRole('button', { name: 'Импорт XLSX', exact: true }).click();
-  await page.getByLabel('Ключ администратора').fill(process.env.QOR_ADMIN_TOKEN!);
   await page.getByRole('dialog').getByRole('combobox').selectOption('iek');
   await page.getByLabel('Шесть файлов XLSX').setInputFiles(files);
   await page.getByRole('button', { name: 'Загрузить и проверить', exact: true }).click();
@@ -261,7 +260,7 @@ test('merged 1C exchange navigation, template, and assistant destination', async
   await page.getByRole('button', { name: 'Обмен с 1С', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Обмен с 1С', exact: true })).toBeVisible();
   await expect(page.getByLabel('Файлы выгрузок 1С')).toBeVisible();
-  await expect(page.getByLabel('Ключ загрузки администратора')).toBeVisible();
+  await expect(page.getByLabel('Ключ загрузки администратора')).toHaveCount(0);
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Скачать шаблон остатков' }).click();
   const csv = await fs.readFile((await (await download).path())!, 'utf8');
