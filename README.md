@@ -1,7 +1,24 @@
+<a id="demo"></a>
+## <img src="docs/assets/jury.svg" alt="Демо для жюри — публичный сайт QOR ai" width="100%" />
+
 <p align="center">
-  <strong><a href="https://qor.152.70.57.1.sslip.io">Открыть QOR AI — рабочее демо</a></strong><br />
-  Публичный сайт с HTTPS · серверный расчёт на синтетических данных
+  <strong>Проверить проект онлайн</strong><br />
+  Нажмите кнопку ниже, чтобы перейти на публичный сайт QOR ai.
 </p>
+
+<p align="center">
+  <a href="https://qor.152.70.57.1.sslip.io">
+    <img src="docs/assets/open-demo.svg" alt="Открыть QOR ai — перейти к публичному демо" width="440" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://qor.152.70.57.1.sslip.io"><strong>https://qor.152.70.57.1.sslip.io</strong></a><br />
+  Публичный HTTPS · готовые frontend и backend · серверный расчёт на синтетических данных<br />
+  Для просмотра сайта не нужно устанавливать проект на компьютер.
+</p>
+
+**Быстрая проверка:** выберите режим API и набор `demo-engine-v1` → откройте рекомендации → посмотрите объяснение количества → проверьте сценарий → утвердите заказ и скачайте CSV. [Подробный сценарий проверки →](#start)
 
 <p align="center">
   <img src="docs/assets/qor-logo.jpg" alt="Логотип QOR ai" width="193" />
@@ -17,6 +34,7 @@
 </p>
 
 <p align="center">
+  <a href="#demo"><strong>Открыть демо для жюри</strong></a> ·
   <a href="#idea">Идея</a> ·
   <a href="#features">Возможности</a> ·
   <a href="#ai">Искусственный интеллект</a> ·
@@ -221,7 +239,7 @@ docker compose -f frontend/compose.yaml up --build -d
 
 Он также использует порт 8080. Не запускайте оба web-контейнера одновременно на одном порту. Остановка соответствующего Compose: `docker compose down` с тем же `-f`, если он использовался. Флаг `-v` удаляет тома — для обычного перезапуска он не нужен.
 
-Для публичного HTTPS задайте домен в `SITE_ADDRESS`, `HTTP_PORT=80`, `HTTPS_PORT=443`, направьте DNS на сервер и откройте эти порты. Подтверждённая публичная ссылка в текущем README не указана. [Обмен, запуск и публикация →](docs/ONE_C_EXCHANGE.md)
+Для публичного HTTPS задайте домен в `SITE_ADDRESS`, `HTTP_PORT=80`, `HTTPS_PORT=443`, направьте DNS на сервер и откройте эти порты. Публичная версия для жюри: [открыть QOR ai](https://qor.152.70.57.1.sslip.io). [Обмен, запуск и публикация →](docs/ONE_C_EXCHANGE.md)
 
 </details>
 
