@@ -194,13 +194,17 @@ export function WarehouseScene({
                       <dt>Свободный остаток</dt>
                       <dd>
                         {number(selected.available_stock)}{' '}
-                        <small>{selected.available_stock !== null && selected.unit}</small>
+                        <small>
+                          {selected.available_stock !== null &&
+                            (selected.stock_unit || selected.unit)}
+                        </small>
                       </dd>
                     </div>
                     <div>
                       <dt>Ожидается в пути</dt>
                       <dd>
-                        {number(selected.eligible_incoming)} <small>{selected.unit}</small>
+                        {number(selected.eligible_incoming)}{' '}
+                        <small>{selected.stock_unit || selected.unit}</small>
                       </dd>
                     </div>
                     <div className="warehouse-order">

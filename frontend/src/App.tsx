@@ -53,8 +53,9 @@ import { OrderModal } from './components/OrderModal';
 import { InventorySummary } from './components/InventorySummary';
 import { Assistant } from './components/Assistant';
 import { WarehouseScene } from './components/WarehouseScene';
+import { Exchange } from './components/Exchange';
 
-type View = 'overview' | 'recommendations' | 'quality' | 'assistant';
+type View = 'overview' | 'recommendations' | 'quality' | 'assistant' | 'exchange';
 const initialMode: DataMode = import.meta.env.VITE_DATA_MODE === 'api' ? 'api' : 'demo';
 const PAGE_SIZE = 6;
 export default function App() {
@@ -90,9 +91,10 @@ export default function App() {
   const [chartError, setChartError] = useState('');
   const [chartRetry, setChartRetry] = useState(0);
   const epoch = useRef(0);
+  const requestedDataset = useRef<string | null>(null);
   const tableRef = useRef<HTMLElement>(null);
   const validForOrder = (r: Recommendation) =>
-    r.available_stock !== null && r.data_status !== 'missing' && r.recommended_qty > 0;
+    r.available_stock !== null && r.data_status !== 'missing' && (r.recommended_qty ?? 0) > 0;
 
   const load = useCallback(
     async (chosen?: Dataset) => {
@@ -116,7 +118,9 @@ export default function App() {
         const available = chosen ? [chosen] : await gateway.datasets();
         if (epoch.current !== id) return;
         if (!chosen) setDatasets(available);
-        const active = chosen || available[0];
+        const active =
+          chosen || available.find((d) => d.id === requestedDataset.current) || available[0];
+        requestedDataset.current = null;
         if (!active)
           throw new Error(
             'На сервере нет наборов данных. Добавьте набор через backend или откройте деморежим.',
@@ -125,8 +129,8 @@ export default function App() {
         const result = await gateway.createRun(active.id, 'all', active.as_of);
         const resultRows = await gateway.recommendations(result.run_id);
         if (epoch.current !== id) return;
-        setRun(result);
-        setBaseRun(result);
+        setRun({ ...result, summary: resultRows.summary });
+        setBaseRun({ ...result, summary: resultRows.summary });
         setRows(resultRows.items);
         setBaseRows(resultRows.items);
         setChartSku(resultRows.items.find((r) => r.available_stock !== null)?.sku || '');
@@ -185,14 +189,14 @@ export default function App() {
               .includes(query.toLowerCase().trim()) &&
             (filter === 'all' ||
               (filter === 'critical' && r.risk_status === 'critical') ||
-              (filter === 'review' && r.data_status === 'missing') ||
-              (filter === 'order' && r.recommended_qty > 0)),
+              (filter === 'review' && r.data_status !== 'observed') ||
+              (filter === 'order' && (r.recommended_qty ?? 0) > 0)),
         )
         .sort((a, b) =>
           sort === 'name'
             ? a.name.localeCompare(b.name, 'ru')
             : sort === 'qty'
-              ? b.recommended_qty - a.recommended_qty
+              ? (b.recommended_qty ?? -1) - (a.recommended_qty ?? -1)
               : { critical: 0, warning: 1, healthy: 2 }[a.risk_status] -
                 { critical: 0, warning: 1, healthy: 2 }[b.risk_status],
         ),
@@ -239,7 +243,7 @@ export default function App() {
     try {
       const result = await gateway.scenario(baseRun.run_id, values);
       const response = await gateway.recommendations(result.run_id);
-      setRun(result);
+      setRun({ ...result, summary: response.summary });
       setRows(response.items);
       setScenario(values);
       setSelected(new Set(response.items.filter(validForOrder).map((r) => r.sku)));
@@ -323,6 +327,13 @@ export default function App() {
             <SlidersHorizontal size={20} /> Что, если…
           </button>
           <span className="nav-label second">ДАННЫЕ И КОНТРОЛЬ</span>
+          <button
+            className={view === 'exchange' ? 'active' : ''}
+            aria-current={view === 'exchange' ? 'page' : undefined}
+            onClick={() => navigate('exchange')}
+          >
+            <ArrowDownToLine size={20} /> Обмен с 1С
+          </button>
           <button
             className={view === 'quality' ? 'active' : ''}
             aria-current={view === 'quality' ? 'page' : undefined}
@@ -418,20 +429,24 @@ export default function App() {
             <div>
               <span className="eyebrow">РАБОЧЕЕ ПРОСТРАНСТВО / ЭЛЕКТРОКОМПЛЕКТ</span>
               <h1>
-                {view === 'assistant'
-                  ? 'ИИ-помощник'
-                  : view === 'quality'
-                    ? 'Проверка данных'
-                    : view === 'recommendations'
-                      ? 'План закупок'
-                      : 'Обзор склада'}
+                {view === 'exchange'
+                  ? 'Обмен с 1С'
+                  : view === 'assistant'
+                    ? 'ИИ-помощник'
+                    : view === 'quality'
+                      ? 'Проверка данных'
+                      : view === 'recommendations'
+                        ? 'План закупок'
+                        : 'Обзор склада'}
               </h1>
               <p>
-                {view === 'assistant'
-                  ? 'Ваш склад понятным языком. Спросите о цифрах или работе с сайтом.'
-                  : view === 'quality'
-                    ? 'Источники, ограничения и всё, что требует вашего внимания.'
-                    : 'Остатки, прогноз и закупки — всё перед вами.'}
+                {view === 'exchange'
+                  ? 'Загрузите выгрузки, проверьте расчёт и подготовьте заказ.'
+                  : view === 'assistant'
+                    ? 'Ваш склад понятным языком. Спросите о цифрах или работе с сайтом.'
+                    : view === 'quality'
+                      ? 'Источники, ограничения и всё, что требует вашего внимания.'
+                      : 'Остатки, прогноз и закупки — всё перед вами.'}
               </p>
             </div>
             <div className="heading-actions">
@@ -448,7 +463,10 @@ export default function App() {
               </button>
             </div>
           </div>
-          <div className="context-bar">
+          <div
+            className="context-bar"
+            style={view === 'exchange' ? { display: 'none' } : undefined}
+          >
             <div className="context-fields">
               <label>
                 <Database size={15} />
@@ -519,7 +537,22 @@ export default function App() {
               }}
             />
           </div>
-          {error && view !== 'assistant' && (
+          <div hidden={view !== 'exchange'}>
+            <Exchange
+              onOpen={async (d) => {
+                setSupplier('all');
+                if (mode !== 'api') {
+                  requestedDataset.current = d.id;
+                  setMode('api');
+                } else {
+                  setDatasets(await api.datasets());
+                  void load(d);
+                }
+                navigate('overview');
+              }}
+            />
+          </div>
+          {error && view !== 'assistant' && view !== 'exchange' && (
             <div className="error-box main-error" role="alert">
               <TriangleAlert size={23} />
               <div>
@@ -536,7 +569,7 @@ export default function App() {
               </div>
             </div>
           )}
-          {view === 'assistant' ? null : loading ? (
+          {view === 'assistant' || view === 'exchange' ? null : loading ? (
             <div className="loading-view" role="status" aria-live="polite">
               <div className="skeleton-stats">
                 {[1, 2, 3, 4].map((i) => (
@@ -652,9 +685,9 @@ export default function App() {
                           />
                           <Stat
                             icon={<Activity size={18} />}
-                            label="Разовые покупки"
+                            label={mode === 'api' ? 'Товары с разовым спросом' : 'Разовые покупки'}
                             value={summary?.anomaly_count || 0}
-                            unit="заказ."
+                            unit={mode === 'api' ? 'тов.' : 'заказ.'}
                             note="Выделены из регулярного спроса"
                             trend="Прогноз без искажений"
                             tone="blue"
@@ -707,7 +740,7 @@ export default function App() {
                                     </option>
                                   ))}
                               </select>
-                              <span>{chartRow?.unit || 'шт'}</span>
+                              <span>{chartRow?.stock_unit || chartRow?.unit || 'шт'}</span>
                             </div>
                             {!chartRow ? (
                               <div className="chart-skeleton">
@@ -925,15 +958,17 @@ export default function App() {
                                   ) : (
                                     number(row.available_stock)
                                   )}
-                                  <small>{row.available_stock !== null && row.unit}</small>
+                                  <small>
+                                    {row.available_stock !== null && (row.stock_unit || row.unit)}
+                                  </small>
                                 </td>
                                 <td className="numeric muted">
                                   {number(row.eligible_incoming)}
-                                  <small>{row.unit}</small>
+                                  <small>{row.stock_unit || row.unit}</small>
                                 </td>
                                 <td className="numeric">
                                   <span
-                                    className={`order-qty ${row.recommended_qty > 0 ? 'positive' : ''}`}
+                                    className={`order-qty ${(row.recommended_qty ?? 0) > 0 ? 'positive' : ''}`}
                                   >
                                     {row.data_status === 'missing'
                                       ? '—'
@@ -1050,6 +1085,7 @@ export default function App() {
           gateway={gateway}
           mode={mode}
           supplier={supplier}
+          run={baseRun?.run_id}
           onApply={applyScenario}
           onClose={() => setScenarioOpen(false)}
         />
@@ -1060,6 +1096,7 @@ export default function App() {
           run={run.run_id}
           gateway={gateway}
           mode={mode}
+          synthetic={dataset?.mode === 'synthetic'}
           onClose={() => setOrderOpen(false)}
         />
       )}

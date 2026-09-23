@@ -14,7 +14,9 @@ services:
     security_opt:
       - no-new-privileges:true
   web:
-    image: caddy:2.10.2-alpine
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.web
     depends_on:
       api:
         condition: service_healthy
@@ -24,8 +26,6 @@ services:
       - "${HTTP_PORT:-8080}:80"
       - "${HTTPS_PORT:-8443}:443"
     volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./deploy/web:/srv:ro
       - caddy_data:/data
       - caddy_config:/config
     restart: unless-stopped

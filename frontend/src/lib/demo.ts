@@ -261,7 +261,7 @@ export const fixtureRows: Recommendation[] = seeds.map(
 );
 export function summarize(rows: Recommendation[]): Summary {
   return {
-    order_skus: rows.filter((r) => r.recommended_qty > 0).length,
+    order_skus: rows.filter((r) => (r.recommended_qty ?? 0) > 0).length,
     risk_skus: rows.filter((r) => r.risk_status === 'critical').length,
     anomaly_count: rows.reduce((sum, r) => sum + r.anomaly_count, 0),
     review_skus: rows.filter((r) => r.data_status === 'missing').length,
@@ -279,22 +279,22 @@ const readRun = (id: string) => {
 };
 export function demoProjection(row: Recommendation, scenario: Scenario): ProductDetail {
   const base = fixtureRows.find((r) => r.sku === row.sku)!;
-  const daily = base.forecast_qty / 21;
+  const daily = (base.forecast_qty ?? 0) / 21;
   const applies = scenario.supplier_id === 'all' || scenario.supplier_id === row.supplier_id;
   const change = applies ? scenario.demand_change_pct : 0;
   const delay = applies ? scenario.delay_days : 0;
   const projection = Array.from({ length: 29 }, (_, d) => {
     const dt = new Date(Date.UTC(2026, 8, 22 + d));
-    const originalArrival = d >= 7 ? base.eligible_incoming : 0;
-    const delayedArrival = d >= 7 + delay ? base.eligible_incoming : 0;
+    const originalArrival = d >= 7 ? (base.eligible_incoming ?? 0) : 0;
+    const delayedArrival = d >= 7 + delay ? (base.eligible_incoming ?? 0) : 0;
     const baseline = (base.available_stock ?? 0) + originalArrival - daily * d;
     const altered = (base.available_stock ?? 0) + delayedArrival - daily * (1 + change / 100) * d;
     return {
       date: `${dt.getUTCDate()}.${String(dt.getUTCMonth() + 1).padStart(2, '0')}`,
       baseline: Math.round(baseline),
       scenario: Math.round(altered),
-      with_order: Math.round(altered + (d >= 14 ? row.recommended_qty : 0)),
-      incoming: d === 7 + delay ? base.eligible_incoming : 0,
+      with_order: Math.round(altered + (d >= 14 ? (row.recommended_qty ?? 0) : 0)),
+      incoming: d === 7 + delay ? (base.eligible_incoming ?? 0) : 0,
     };
   });
   return {
@@ -319,7 +319,9 @@ export function demoProjection(row: Recommendation, scenario: Scenario): Product
   };
 }
 function applyFixtureRisk(row: Recommendation, scenario: Scenario) {
-  const firstGap = demoProjection(row, scenario).projection.findIndex((p) => p.scenario < 0);
+  const firstGap = demoProjection(row, scenario).projection.findIndex(
+    (p) => p.scenario !== null && p.scenario < 0,
+  );
   row.risk_status =
     row.available_stock === null
       ? 'warning'
@@ -413,15 +415,18 @@ export const demo: Gateway = {
       const base = fixtureRows.find((r) => r.sku === previous.sku)!;
       const row = structuredClone(base);
       if (values.supplier_id !== 'all' && row.supplier_id !== values.supplier_id) return row;
-      row.forecast_qty = Math.ceil(base.forecast_qty * (1 + values.demand_change_pct / 100));
-      row.safety_stock = Math.ceil(base.safety_stock * (1 + values.demand_change_pct / 100));
+      row.forecast_qty = Math.ceil((base.forecast_qty ?? 0) * (1 + values.demand_change_pct / 100));
+      row.safety_stock = Math.ceil((base.safety_stock ?? 0) * (1 + values.demand_change_pct / 100));
       row.eligible_incoming = 7 + values.delay_days > 21 ? 0 : base.eligible_incoming;
       row.raw_need =
         row.available_stock === null
           ? 0
           : Math.max(
               0,
-              row.forecast_qty + row.safety_stock - row.available_stock - row.eligible_incoming,
+              row.forecast_qty +
+                row.safety_stock -
+                row.available_stock -
+                (row.eligible_incoming ?? 0),
             );
       const multiple = row.unit === 'м' ? 305 : row.sku === '030200428_' ? 12 : 1;
       row.recommended_qty =

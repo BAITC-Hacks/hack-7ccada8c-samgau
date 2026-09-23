@@ -9,9 +9,10 @@ from pydantic import Field
 from ..contracts import Model
 from .adapter import AIUnavailable
 
-Destination = Literal['overview', 'recommendations', 'quality', 'scenario']
+Destination = Literal['overview', 'recommendations', 'quality', 'scenario', 'exchange']
 
 KNOWLEDGE = {
+    'exchange': {'title': 'Обмен с 1С', 'help': 'Загрузка шести исходных XLSX одного поставщика через ключ администратора. Для IEK можно дополнить inventory.csv с актуальным свободным остатком. После импорта откройте расчёт, проверьте данные, утвердите заказ и скачайте CSV в плане закупок. Это файловый обмен: совместимость с обработкой импорта конкретной базы 1С требует проверки.'},
     'overview': {'title': 'Обзор склада', 'help': 'Основные показатели, диаграмма состояния склада и прогноз запаса. Товар для графика выбирается над графиком. Кнопка «Почему так?» открывает паспорт решения.'},
     'recommendations': {'title': 'План закупок', 'help': 'Поиск по названию, артикулу или коду; фильтры поставщика и риска. Нажмите название товара, чтобы увидеть формулу и объяснение. Отметьте позиции и нажмите «Проверить и выгрузить». Изменение количества требует причины. Сначала проверка и утверждение черновика, затем скачивание CSV. Поставщику ничего автоматически не отправляется.'},
     'quality': {'title': 'Проверка данных', 'help': 'Показывает источники и проблемы качества. Неизвестный остаток не равен нулю. Позиции без данных нельзя заказывать до проверки.'},
@@ -30,6 +31,7 @@ class ScreenProduct(Model):
     supplier_article: str = Field(max_length=120)
     name: str = Field(max_length=240)
     unit: str = Field(max_length=30)
+    stock_unit: str | None = Field(default=None, max_length=30)
     available_stock: float | None
     eligible_incoming: float | None
     forecast_qty: float | None
@@ -84,6 +86,7 @@ def fallback(body: ChatRequest, notice: str) -> ChatResponse:
     q = body.message.casefold()
     c = body.context
     nav = next((key for key, words in (
+        ('exchange', ('1с', '1c', 'импорт', 'загрузить фай', 'обмен')),
         ('scenario', ('сценари', 'задерж', 'опозда', 'что, если')),
         ('quality', ('качеств', 'проверк', 'нет данных')),
         ('recommendations', ('выгруз', 'скача', 'csv', 'найти', 'навигац', 'где', 'экспорт')),
@@ -100,7 +103,7 @@ def fallback(body: ChatRequest, notice: str) -> ChatResponse:
         p = matched
         value = lambda n: 'нет данных' if n is None else f'{n:g}'
         text = (f'{p.name} ({p.supplier_article}). Данные текущего экрана: свободно {value(p.available_stock)}, '
-                f'в пути {value(p.eligible_incoming)}, прогноз {value(p.forecast_qty)}, страховой запас {value(p.safety_stock)}. '
+                f'в пути {value(p.eligible_incoming)}, прогноз {value(p.forecast_qty)}, страховой запас {value(p.safety_stock)} (складская единица: {p.stock_unit or p.unit}). '
                 f'Рекомендовано к заказу: {value(p.recommended_qty)} {p.unit}.\n\n'
                 'Откройте карточку ниже: в ней показаны формула, единицы и предупреждения. '
                 'Неизвестные значения нельзя считать нулями.')
