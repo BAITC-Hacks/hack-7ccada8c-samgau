@@ -1,113 +1,66 @@
-# Капитан: объединение и сервер
+# Публикация бэкенда и подключение интерфейса
 
-## Что передать команде сейчас
+Код уже находится в командном репозитории; повторно копировать архив капитана
+поверх проекта не требуется. Перед изменениями получать свежую main, работать
+в отдельной ветке и проверять diff. Алгоритм и импорт принадлежат участнику 2,
+интерфейс — участнику 3. Не заменять их файлы копией старого пакета.
 
-- Backend 2: contracts.py + INTEGRATION.md. Его файлы только engine/, importers/ и тесты.
-- Frontend: API.md + openapi.json + api-client.ts. Его папка frontend/.
-- Твоя ветка: codex/platform-ai. Другие: codex/data-engine и codex/ui.
-- Точки соединения фиксированы: один FastAPI, один набор типов, один файл Compose.
-
-## Перенос пакета в выданный Git-репозиторий
-
-Эти команды выполняются на вашей машине внутри уже клонированного командного
-репозитория. Архив не содержит `.git` и не является клоном GitHub.
-
-```bash
-git status
-git switch -c codex/platform-ai
-```
-
-Если ветка уже существует, использовать `git switch codex/platform-ai`.
-Скопировать содержимое пакета в корень репозитория. Сначала сравнить уже
-существующие общие файлы; не перезаписывать чужие изменения без просмотра diff.
-Архив не содержит исходные Excel, реальные ключи и данные.
-
-```bash
-git diff
-git add backend docs scripts examples deploy .github .gitignore .gitattributes .dockerignore .env.example Dockerfile compose.yaml pytest.ini README.md run.py
-git commit -m "Add QOR platform API, integration contract and order workflow"
-git push -u origin codex/platform-ai
-```
-
-Участник 2 сначала получает твой контракт, затем добавляет свою часть.
-После появления удалённых веток:
-
-```bash
-git fetch origin
-git merge origin/codex/data-engine
-git merge origin/codex/ui
-```
-
-Если репозиторий требует PR, делать слияние через PR. Реальную основную ветку
-смотрите в репозитории — не предполагаем автоматически `main` или `master`.
-В конфликтах общих типов сохраняйте согласованный контракт, а не выбирайте
-всю чужую или свою версию файла одной командой.
-
-После слияния:
+## Проверка версии перед публикацией
 
 ```bash
 python -m pip install -r backend/requirements-dev.lock -r backend/requirements-engine.txt
 python -m pytest
 python scripts/export_openapi.py
+git diff --check
 ```
 
-Затем настроить ENGINE_MODULE/IMPORTER_MODULE, проверить реальный импорт и запустить
-HTTP smoke. Зафиксировать рабочий коммит перед демонстрацией.
+`python` здесь — Python 3.12 из виртуального окружения. Docker использует
+те же закреплённые runtime-зависимости. Шаблон CI находится в `docs/ci/`;
+он не активирован из-за отсутствия права workflow у использованной авторизации.
 
-## Подключение React
+## Сервер
 
-Участник 3 собирает production frontend своим закреплённым package-lock:
-
-```bash
-npm ci
-npm run build
-```
-
-Копировать **содержимое** frontend/dist в deploy/web с заменой placeholder index.html.
-В production base URL API пустой, запросы идут на `/api/...`.
-Не размещать frontend dev server на публичном сервере.
-
-## Сервер и HTTPS
-
-Для публикации необходимы доступный Linux-сервер, Docker/Compose, домен,
-указывающий на сервер, и доступные порты 80/443. Эти доступы в задаче не предоставлены.
-
-В `.env` сервера:
+Нужны Docker Engine/Compose, доступный сервер, домен с DNS на этот сервер,
+порты 80/443. В серверном `.env`:
 
 ```dotenv
 APP_ENV=production
-SITE_ADDRESS=qor.your-real-domain.kz
+SITE_ADDRESS=qor.example.kz
 HTTP_PORT=80
 HTTPS_PORT=443
-CORS_ORIGINS=https://qor.your-real-domain.kz
+CORS_ORIGINS=https://qor.example.kz
+ENGINE_MODULE=app.engine.service
+IMPORTER_MODULE=app.importers.service
 ```
 
-Заменить домен настоящим. Дополнительно настроить admin-токен, модули и ИИ.
+Заменить домен настоящим, задать случайный ADMIN_TOKEN и при необходимости
+настроить выбранного ИИ-провайдера. Ключи хранятся только на сервере.
+Compose сохраняет SQLite/загрузки в /data, один worker. При обновлении не
+удалять volumes; предварительно сделать резервную копию базы и данных.
 
 ```bash
 docker compose up --build -d
 docker compose ps
-docker compose logs --tail=100 api web
-python scripts/smoke.py --url https://qor.your-real-domain.kz
-python scripts/ai_smoke.py --url https://qor.your-real-domain.kz
+python scripts/smoke.py --url https://qor.example.kz
+python scripts/ai_smoke.py --url https://qor.example.kz
 ```
 
-Caddy получает сертификат при корректных DNS и сетевых условиях; для `:80`
-работает локальный HTTP. Проверить с другого устройства фронтенд и скачивание CSV.
-Нет внешнего порта API/SQLite. Не запускать несколько API-контейнеров или workers:
-ограничитель фонового импорта рассчитан на один процесс.
+Обычный smoke работает без ИИ; ai_smoke требует настроенного провайдера и
+ответа generated. Проверить HTTPS и основной сценарий с другого устройства.
+Домен, сервер и живой вызов провайдера этой доработкой не публиковались.
 
-## Финальная проверка капитана
+## Когда frontend будет готов
 
-1. `/api/health` открыт; engine/importer/AI настроены.
-2. Импорт реальных файлов успешно завершён, quality report доступен.
-3. Тесты алгоритма участника 2 покрывают все must-have, включая синтетические ID клиентов.
-4. Реальный ИИ smoke выдаёт PASS; fallback не считается выполненным критерием ИИ.
-5. Изменение сценария создаёт новый run, старый черновик остаётся связан со старым.
-6. После перезапуска данные и сессия сохранены.
-7. Браузеры двух проверяющих не видят чужие черновики.
-8. CSV содержит утверждённое количество и верные единицы.
-9. Живая ссылка, README, ограничения и вклад трёх участников добавлены в сдачу.
+Передать [FRONTEND_HANDOFF.md](FRONTEND_HANDOFF.md), [openapi.json](openapi.json)
+и [api-client.ts](../examples/api-client.ts). Сначала согласовать Bearer,
+форматы ответов, выбор поставщика, сценарий и заказ. Прогнать браузерный сценарий
+на API, затем собирать UI в режиме api с относительным /api.
 
-Демонстрационный smoke платформы работает даже без алгоритма. Для сдачи всего
-кейса обязательно пройти пункты 2–4 с фактической интеграцией.
+Корневой Compose раздаёт содержимое deploy/web через Caddy и проксирует /api
+в api:8000. При интеграции выбрать один процесс сборки frontend и доставки
+его dist в deploy/web. Отдельный frontend/compose.yaml сейчас является
+самостоятельной демонстрацией: не запускать два web на одном порту.
+
+До сдачи: публичная HTTPS-ссылка, фактическое подключение UI к серверному
+движку, контроль экспорта 168, проверка ИИ, README с ограничениями и вкладом
+участников, данные доступа на платформе организатора.
