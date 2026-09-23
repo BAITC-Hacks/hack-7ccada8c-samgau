@@ -58,7 +58,7 @@ $$Recommended\_Qty = \max(0, \; Forecast\_Demand + Safety\_Stock - Current\_Stoc
 * Python 3.10+
 * Docker и Docker Compose (опционально)
 
-### Локальная установка и запуск
+### Локальная установка и запуск проекта
 
 1. **Клонируйте репозиторий:**
    ```bash
