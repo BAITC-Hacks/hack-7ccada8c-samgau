@@ -2795,6 +2795,261 @@
           }
         }
       }
+    },
+    "/api/assistant/status": {
+      "get": {
+        "tags": [
+          "AI"
+        ],
+        "summary": "Status",
+        "operationId": "status_api_assistant_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request Entity Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assistant/messages": {
+      "post": {
+        "tags": [
+          "AI"
+        ],
+        "summary": "Message",
+        "operationId": "message_api_assistant_messages_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request Entity Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -2924,6 +3179,125 @@
           "as_of"
         ],
         "title": "CalculationParameters"
+      },
+      "ChatRequest": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Message"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/ChatTurn"
+            },
+            "type": "array",
+            "maxItems": 12,
+            "title": "History"
+          },
+          "context": {
+            "$ref": "#/components/schemas/ScreenContext"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "context"
+        ],
+        "title": "ChatRequest"
+      },
+      "ChatResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 6000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "destinations": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "overview",
+                "recommendations",
+                "quality",
+                "scenario"
+              ]
+            },
+            "type": "array",
+            "maxItems": 4,
+            "title": "Destinations"
+          },
+          "source_skus": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "title": "Source Skus"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "generated",
+              "fallback"
+            ],
+            "title": "Status"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text",
+          "destinations",
+          "source_skus",
+          "status",
+          "provider",
+          "notice"
+        ],
+        "title": "ChatResponse"
+      },
+      "ChatTurn": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 6000,
+            "minLength": 1,
+            "title": "Content"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatTurn"
       },
       "CreateOrder": {
         "properties": {
@@ -4232,6 +4606,213 @@
           "comparison"
         ],
         "title": "ScenarioResponse"
+      },
+      "ScreenContext": {
+        "properties": {
+          "data_mode": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "real",
+              "none"
+            ],
+            "title": "Data Mode"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "warehouse": {
+            "type": "string",
+            "maxLength": 160,
+            "title": "Warehouse"
+          },
+          "as_of": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "As Of"
+          },
+          "total_products": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Products"
+          },
+          "order_skus": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Order Skus"
+          },
+          "risk_skus": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Risk Skus"
+          },
+          "review_skus": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Review Skus"
+          },
+          "scenario": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Scenario"
+          },
+          "selected_sku": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Sku"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/ScreenProduct"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "Products"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "data_mode",
+          "warehouse",
+          "as_of",
+          "total_products",
+          "order_skus",
+          "risk_skus",
+          "review_skus",
+          "scenario",
+          "products"
+        ],
+        "title": "ScreenContext"
+      },
+      "ScreenProduct": {
+        "properties": {
+          "sku": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Sku"
+          },
+          "supplier_article": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Supplier Article"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 240,
+            "title": "Name"
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 30,
+            "title": "Unit"
+          },
+          "available_stock": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Stock"
+          },
+          "eligible_incoming": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eligible Incoming"
+          },
+          "forecast_qty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Qty"
+          },
+          "safety_stock": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Safety Stock"
+          },
+          "recommended_qty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Qty"
+          },
+          "risk_status": {
+            "type": "string",
+            "maxLength": 30,
+            "title": "Risk Status"
+          },
+          "data_status": {
+            "type": "string",
+            "maxLength": 30,
+            "title": "Data Status"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "title": "Warnings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sku",
+          "supplier_article",
+          "name",
+          "unit",
+          "available_stock",
+          "eligible_incoming",
+          "forecast_qty",
+          "safety_stock",
+          "recommended_qty",
+          "risk_status",
+          "data_status"
+        ],
+        "title": "ScreenProduct"
       },
       "SessionResponse": {
         "properties": {
