@@ -29,7 +29,15 @@ PYTHONPATH=backend backend/.venv/bin/python -m pytest backend/tests -q
 внутри этого демонабора. Значения не являются условиями реальных поставщиков.
 Генераторы находятся в Git; созданные файлы лежат в игнорируемой папке `data/`.
 
-## Вызов из API
+## Подключение к API капитана
+
+Готовая точка входа: `app.engine.service.calculate(dataset, params)`, результат
+— `EngineResult` из общего `app.contracts`. Инструкция подключения и контрольный
+сценарий: [CAPTAIN_HANDOFF.md](CAPTAIN_HANDOFF.md).
+Платформенный набор `demo-platform-v1` остаётся фикстурой; для нашего движка
+нужен набор с backend `plugin`.
+
+## Прямой вызов внутреннего алгоритма
 
 ```python
 from app.engine import ProductInput, Scenario, calculate
@@ -58,7 +66,8 @@ restored = ProductInput.model_validate(product.model_dump(mode="json"))
 
 ## Входной контракт
 
-Схемы находятся в `models.py`. Числа должны быть конечными, SKU — строкой.
+Внутренние схемы находятся в `models.py`; сервис преобразует их в общий
+HTTP-контракт `app.contracts`. Числа должны быть конечными, SKU — строкой.
 Коды с ведущими нулями сохраняются. Неизвестные значения передаются как `None`.
 
 - Один `ProductInput` представляет один SKU одного поставщика на одном складе.

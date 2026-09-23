@@ -12,6 +12,7 @@ from ..engine.calculator import calculate_many
 from ..engine.demo import AS_OF, DATASET_ID, make_demo_products
 from .assemble import assemble_products
 from .xlsx import IEKAdapter, ImportBatch, SystemeElectricAdapter, WideColumn, WorkbookMapping
+from .service import Coverage, ImportConfiguration, MAPPING_VERSION, WorkbookManifest, write_manifest
 
 
 def create_demo_workbooks(output_dir: Path):
@@ -66,13 +67,21 @@ def create_demo_workbooks(output_dir: Path):
             for row in rows:
                 sheet.append(row)
             path = output_dir / f'{supplier}_{kind}.xlsx'
-            book.save(path)
-            book.close()
             mapping = WorkbookMapping(kind=kind, version='synthetic-v1-not-real-supplier-format',
                                       sheet='SYNTHETIC', columns={f: f for f in fields}, wide=wide,
                                       snapshot_semantics='month_start' if kind == 'monthly_stock' else 'unknown')
+            configuration = None
+            if kind == 'moq':
+                configuration = ImportConfiguration(as_of=AS_OF, warehouse_id=selected[0].warehouse_id,
+                    policy=selected[0].policy,
+                    category_policies={p.category_code: p.category_policy for p in selected},
+                    coverage=tuple(Coverage(sku=p.sku, detail_months=p.detail_months,
+                                           incoming_complete=p.incoming_complete, stockouts=p.stockouts) for p in selected))
+            write_manifest(book, WorkbookManifest(supplier_id=supplier, mapping=mapping, configuration=configuration))
+            book.save(path)
+            book.close()
             mappings.append((supplier, path, mapping))
-    manifest = dict(dataset_id=DATASET_ID, data_mode='synthetic', as_of=AS_OF.isoformat(),
+    manifest = dict(dataset_id=DATASET_ID, data_mode='synthetic', as_of=AS_OF.isoformat(), mapping_version=MAPPING_VERSION,
         label='Синтетические форматы для проверки импорта; реальные выгрузки не проверены',
         files=[dict(supplier_id=s, file=p.name, mapping=m.model_dump(mode='json')) for s, p, m in mappings],
         coverage=[dict(supplier_id=p.supplier_id, sku=p.sku, warehouse_id=p.warehouse_id,
