@@ -114,9 +114,11 @@ def create_app(settings=None, ai=None):
             fail(401, "session_required", "Создайте сессию через POST /api/sessions")
         return owner
 
-    def admin(x_admin_token: str | None = Header(default=None)):
+    def import_permission(x_admin_token: str | None = Header(default=None)):
+        if settings.import_access == "session":
+            return
         if not settings.admin_token or not x_admin_token or not secrets.compare_digest(settings.admin_token, x_admin_token):
-            fail(403, "admin_required", "Импорт доступен администратору")
+            fail(403, "admin_required", "Импорт через интерфейс отключён настройками сервера. Обратитесь к администратору.")
 
     def limited(key, maximum):
         current = time.monotonic()
@@ -233,8 +235,10 @@ def create_app(settings=None, ai=None):
             finally:
                 upload_lock.release()
 
-    @app.post("/api/imports", status_code=202, tags=["data"], dependencies=[Depends(admin)], response_model=ImportResponse)
+    @app.post("/api/imports", status_code=202, tags=["data"], dependencies=[Depends(import_permission)], response_model=ImportResponse)
     async def start_import(files: list[UploadFile] = File(...), supplier: str = Form(...), mapping_version: str = Form(...), as_of: date = Form(...), warehouse_id: str = Form(...), owner=Depends(session)):
+        limited(("imports", owner), 4)
+        limited(("imports", "global"), 20)
         if not settings.importer_module or not settings.engine_module:
             fail(503, "integration_missing", "Задайте IMPORTER_MODULE и ENGINE_MODULE")
         if not 1 <= len(files) <= 12:

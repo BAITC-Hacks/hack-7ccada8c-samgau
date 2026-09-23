@@ -23,7 +23,6 @@ const JOB_KEY = 'qor-last-import';
 export function Exchange({ onOpen }: { onOpen: (dataset: Dataset) => void }) {
   const [supplier, setSupplier] = useState('systeme_electric');
   const [files, setFiles] = useState<File[]>([]);
-  const [token, setToken] = useState('');
   const [job, setJob] = useState<ImportJob | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -100,12 +99,10 @@ export function Exchange({ onOpen }: { onOpen: (dataset: Dataset) => void }) {
       form.set('warehouse_id', 'Все склады');
       const current = await request<ImportJob>('/imports', {
         method: 'POST',
-        headers: { 'X-Admin-Token': token },
         body: form,
       });
       sessionStorage.setItem(JOB_KEY, current.import_id);
       setJob(current);
-      setToken('');
       if (current.status === 'completed') void refresh();
     } catch (e) {
       setError((e as Error).message);
@@ -198,21 +195,6 @@ export function Exchange({ onOpen }: { onOpen: (dataset: Dataset) => void }) {
               ))}
             </ul>
           )}
-          <label className="field-label" htmlFor="import-token">
-            Ключ загрузки администратора
-          </label>
-          <input
-            id="import-token"
-            type="password"
-            autoComplete="off"
-            value={token}
-            disabled={locked}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="ADMIN_TOKEN у капитана команды"
-          />
-          <p className="small muted">
-            Ключ нужен для загрузки файлов на сервер. Он не сохраняется в браузере.
-          </p>
           {error && (
             <div role="alert" className="error-box">
               {error}
@@ -232,7 +214,7 @@ export function Exchange({ onOpen }: { onOpen: (dataset: Dataset) => void }) {
           )}
           <button
             className="primary"
-            disabled={locked || !token.trim() || !files.length}
+            disabled={locked || !files.length}
             onClick={upload}
           >
             {locked ? <LoaderCircle size={17} className="spin" /> : <Upload size={17} />} Проверить
