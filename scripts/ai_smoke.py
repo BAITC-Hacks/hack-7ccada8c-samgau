@@ -29,7 +29,21 @@ def main():
     assert parsed['scenario'] == {'shipment_id': sid, 'delay_days': 7, 'demand_change_pct': 20.0}
     explanation = client.call('POST', f'/api/runs/{rid}/explain', {'sku': '00001', 'language': 'ru'})
     assert explanation['status'] == 'generated'
-    print('PASS: live provider parsed the scenario and selected verified engine factors')
+    row = client.call('GET', f'/api/runs/{rid}/products/00001')
+    fields = ('sku', 'supplier_article', 'name', 'unit', 'stock_unit', 'stock_units_per_order_unit',
+              'supplier_id', 'available_stock', 'eligible_incoming', 'forecast_qty', 'safety_stock',
+              'recommended_qty', 'risk_status', 'data_status', 'approval_blockers')
+    chat = client.call('POST', '/api/assistant/messages', {
+        'message': 'Почему рекомендован такой заказ для 00001?', 'history': [],
+        'context': {'data_mode': 'synthetic', 'run_ids': [rid], 'warehouse': ds['warehouse_id'],
+                    'as_of': ds['as_of'], 'total_products': run['summary']['products'],
+                    'order_skus': run['summary']['to_order'], 'risk_skus': run['summary']['critical'],
+                    'review_skus': run['summary']['needs_review'], 'scenario': 'Исходный расчёт',
+                    'selected_sku': '00001', 'selected_supplier_id': 'systeme_electric',
+                    'products': [{**{k: row[k] for k in fields}, 'run_id': rid, 'warnings': row['warnings'][:6]}]},
+    })
+    assert chat['status'] == 'generated', chat['notice']
+    print('PASS: live provider parsed scenario, selected verified factors, and answered contextual chat')
 
 
 if __name__ == '__main__':

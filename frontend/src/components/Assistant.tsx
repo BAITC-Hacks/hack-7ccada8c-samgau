@@ -1,3 +1,4 @@
+import { rowKey } from '../types';
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
@@ -90,7 +91,7 @@ export function Assistant({
   useEffect(() => {
     if (active && messages.length) end.current?.scrollIntoView({ block: 'nearest' });
   }, [messages, pending, active]);
-  const selected = rows.find((row) => row.sku === selectedSku);
+  const selected = rows.find((row) => rowKey(row) === selectedSku);
   const blocked = pending || loading || messages.length >= 80;
   async function submit(question = input, isRetry = false) {
     const text = question.trim();
@@ -243,7 +244,7 @@ export function Assistant({
                                 <small>{product.name}</small>
                               </span>
                               <span>
-                                {product.data_status === 'missing'
+                                {['missing', 'blocked'].includes(product.data_status)
                                   ? 'Проверить данные'
                                   : `К заказу: ${number(product.recommended_qty)} ${product.unit}`}
                               </span>
@@ -376,7 +377,7 @@ export function Assistant({
           >
             <option value="">Весь склад</option>
             {rows.map((row) => (
-              <option key={row.sku} value={row.sku}>
+              <option key={rowKey(row)} value={rowKey(row)}>
                 {row.supplier_article} · {row.name}
               </option>
             ))}

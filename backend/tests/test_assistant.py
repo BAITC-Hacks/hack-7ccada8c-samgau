@@ -11,7 +11,7 @@ from app.main import create_app
 
 def payload(message='Почему такой заказ для ATN000343?'):
     return {'message': message, 'history': [], 'context': {
-        'data_mode': 'synthetic', 'run_id': 'screen-run', 'warehouse': 'Алматы',
+        'data_mode': 'synthetic', 'run_id': None, 'warehouse': 'Алматы',
         'as_of': '2026-09-22', 'total_products': 12, 'order_skus': 8,
         'risk_skus': 2, 'review_skus': 1, 'scenario': 'Без сценария',
         'selected_sku': 'sku-1', 'products': [{
@@ -119,3 +119,31 @@ def test_provider_timeout_returns_labelled_fallback(tmp_path):
         answer = client.post('/api/assistant/messages', headers=headers(client), json=payload()).json()
         assert answer['status'] == 'fallback'
         assert 'ИИ не ответил' in answer['notice']
+
+
+def test_api_chat_resolves_units_and_enforces_run_isolation(tmp_path):
+    s = settings(tmp_path)
+    s.ai_provider = 'disabled'
+    with TestClient(create_app(s)) as client:
+        h = headers(client)
+        run = client.post('/api/runs', headers=h, json={
+            'dataset_id': 'demo-engine-v1', 'supplier_id': 'iek', 'as_of': '2026-09-22',
+        }).json()['run_id']
+        body = payload('Почему этот товар?')
+        body['context']['selected_sku'] = '00007'
+        body['context']['products'][0].update(sku='00007', supplier_id='iek', run_id=run,
+                                             unit='incorrect', stock_unit='incorrect', recommended_qty=999)
+        response = client.post('/api/assistant/messages', headers=h, json=body)
+        assert response.status_code == 200, response.text
+        assert '2 бухта' in response.json()['text']
+        assert 'incorrect' not in response.json()['text']
+        assert ' м' in response.json()['text']
+        assert client.post('/api/assistant/messages', headers=headers(client), json=body).status_code == 404
+        # A forged synthetic flag cannot send a private real run to the provider.
+        store = client.app.state.store
+        owner = store.session(h['Authorization'].removeprefix('Bearer '))
+        obj = store.get('run', run, owner)
+        obj['payload']['data_mode'] = 'real'
+        store.put('run', run, owner, obj['payload'], obj['version'])
+        answer = client.post('/api/assistant/messages', headers=h, json=body).json()
+        assert 'данных компании отключён' in answer['notice']

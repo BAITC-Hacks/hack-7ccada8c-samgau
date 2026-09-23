@@ -1,41 +1,49 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, Clock3, LoaderCircle, Sparkles, TrendingUp } from 'lucide-react';
-import type { DataMode, Gateway, Scenario, Supplier } from '../types';
+import type { DataMode, Gateway, Scenario, Supplier, Shipment } from '../types';
+import { supplierName } from '../lib/format';
 import { Modal } from './Modal';
 export function ScenarioModal({
   gateway,
   mode,
   supplier,
   run,
+  suppliers,
   onApply,
   onClose,
 }: {
   gateway: Gateway;
   mode: DataMode;
   supplier: Supplier;
-  run?: string;
+  run: string;
+  suppliers: string[];
   onApply: (values: Scenario) => Promise<void>;
   onClose: () => void;
 }) {
   const [values, setValues] = useState<Scenario>({
-    delay_days: mode === 'api' ? 0 : 7,
+    delay_days: 0,
     demand_change_pct: 0,
     supplier_id: supplier,
   });
+  const [shipments, setShipments] = useState<Shipment[]>([]);
+  useEffect(() => {
+    let active = true;
+    gateway
+      .shipments?.(run)
+      .then((s) => {
+        if (active) setShipments(s);
+      })
+      .catch((e) => {
+        if (active) setError(e.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [gateway, run]);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [shipments, setShipments] = useState<
-    { id: string; sku: string; supplier_id: Supplier; eta: string; quantity: number }[]
-  >([]);
-  useEffect(() => {
-    if (run && gateway.shipments)
-      gateway
-        .shipments(run)
-        .then(setShipments)
-        .catch((e) => setError(e.message));
-  }, [run, gateway]);
   async function parse() {
     setBusy(true);
     setError('');
@@ -52,7 +60,7 @@ export function ScenarioModal({
           p.delay_days > 30 ||
           p.demand_change_pct < -50 ||
           p.demand_change_pct > 100 ||
-          !['all', 'iek', 'systeme'].includes(p.supplier_id)
+          !['all', ...suppliers].includes(p.supplier_id)
         )
           throw new Error('ИИ вернул параметры вне разрешённых границ. Задайте их вручную.');
         setValues(p);
@@ -104,38 +112,35 @@ export function ScenarioModal({
         disabled={busy}
       >
         <option value="all">Все поставщики</option>
-        <option value="iek">IEK</option>
-        <option value="systeme">Systeme Electric</option>
+        {suppliers.map((s) => (
+          <option key={s} value={s}>
+            {supplierName(s)}
+          </option>
+        ))}
       </select>
       {mode === 'api' && (
-        <>
-          <label className="field-label" htmlFor="shipment">
-            Конкретная партия для задержки
-          </label>
+        <label className="field-label">
+          Выбранная поставка
           <select
-            id="shipment"
+            aria-label="Выбранная поставка"
             value={values.shipment_id || ''}
-            onChange={(e) => setValues({ ...values, shipment_id: e.target.value })}
             disabled={busy || values.supplier_id === 'all'}
+            onChange={(e) => setValues({ ...values, shipment_id: e.target.value || undefined })}
           >
-            <option value="">Выберите партию (для изменения спроса не требуется)</option>
+            <option value="">Выберите поставку для задержки</option>
             {shipments
               .filter((s) => s.supplier_id === values.supplier_id)
               .map((s) => (
-                <option value={s.id} key={s.id}>
-                  {s.sku} · {s.quantity} · поступление {s.eta}
+                <option key={s.id} value={s.id}>
+                  {s.sku} · {s.quantity} складских единиц · {s.eta} · {s.id}
                 </option>
               ))}
           </select>
-          <p className="small muted">
-            При задержке выберите одного поставщика и одну партию. Изменение спроса можно применить
-            ко всем.
-          </p>
-        </>
+        </label>
       )}
       <div className="range-heading">
         <label htmlFor="delay">
-          <Clock3 size={16} /> Задержка поставок
+          <Clock3 size={16} /> Задержка выбранной поставки
         </label>
         <strong>+{values.delay_days} дней</strong>
       </div>
@@ -205,7 +210,7 @@ export function ScenarioModal({
         <button
           className="text-button"
           onClick={parse}
-          disabled={mode === 'demo' || busy || !text.trim()}
+          disabled={mode === 'demo' || busy || !text.trim() || values.supplier_id === 'all'}
         >
           Распознать параметры <ArrowRight size={14} />
         </button>
@@ -229,7 +234,16 @@ export function ScenarioModal({
         <button className="secondary" onClick={onClose} disabled={busy}>
           Отмена
         </button>
-        <button className="primary" onClick={apply} disabled={busy}>
+        <button
+          className="primary"
+          onClick={apply}
+          disabled={
+            busy ||
+            (mode === 'api' &&
+              values.delay_days > 0 &&
+              (!values.shipment_id || values.supplier_id === 'all'))
+          }
+        >
           {busy ? <LoaderCircle size={17} className="spin" /> : <Sparkles size={17} />} Сравнить
           сценарии
         </button>
