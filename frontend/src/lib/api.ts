@@ -33,6 +33,7 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
       try {
         const body = await res.json();
         if (typeof body.message === 'string') message = body.message;
+        else if (typeof body.error?.message === 'string') message = body.error.message;
         else if (typeof body.detail === 'string') message = body.detail;
       } catch {
         /* keep safe HTTP message */
