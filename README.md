@@ -52,16 +52,59 @@ $$Recommended\_Qty = \max(0, \; Forecast\_Demand + Safety\_Stock - Current\_Stoc
 
 ---
 
-## 🚀 4. Инструкция по запуску
+## 🚀 4. Запуск объединённого проекта
 
-### Предварительные требования
-* Python 3.10+
-* Docker и Docker Compose (опционально)
+**Текущее состояние:** добавлен API капитана (сессии, SQLite, сценарии,
+черновики, утверждение, CSV и ИИ-адаптер) и сохранено окружение участника 2.
+Алгоритмы из раздела 2 описывают целевую функциональность: их реализации,
+импортеров реальных Excel и фронтенда в `main` на момент объединения ещё нет.
+Сейчас сквозной запуск использует синтетический `demo-platform-v1`.
 
-### Локальная установка и запуск проекта
+Нужен Python **3.12**. Из корня репозитория:
 
-1. **Клонируйте репозиторий:**
-   ```bash
-   git clone [https://github.com/your-org/electrokomplekt-ai-procurement.git](https://github.com/your-org/electrokomplekt-ai-procurement.git)
-   cd electrokomplekt-ai-procurement word
-   
+```bash
+git clone https://github.com/BAITC-Hacks/hack-7ccada8c-samgau.git
+cd hack-7ccada8c-samgau
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r backend/requirements-dev.lock -r backend/requirements-engine.txt
+cp .env.example .env
+.venv/bin/python run.py
+```
+
+Открыть <http://127.0.0.1:8000/api/docs>. Ключ ИИ для демо не нужен.
+На Windows используйте `py -3.12 -m venv .venv`, затем
+`.venv\Scripts\python.exe` вместо `.venv/bin/python`, а для копирования —
+`copy .env.example .env`.
+
+Проверки (при запущенном сервере для smoke):
+
+```bash
+.venv/bin/python -m pytest
+.venv/bin/python scripts/smoke.py
+```
+
+Либо Docker Compose:
+
+```bash
+cp .env.example .env
+docker compose up --build -d
+python3 scripts/smoke.py --url http://localhost:8080
+```
+
+Открыть <http://localhost:8080>. Пока frontend не добавлен, это стартовая
+страница со ссылкой на API. Остановка: `docker compose down` (без `-v`,
+чтобы сохранить данные).
+
+## 5. Работа команды
+
+- [Спецификация](MVP_SPEC_QOR_AI.md) — требования к итоговому продукту.
+- [Бэкенд капитана](docs/CAPTAIN_BACKEND.md) — API, запуск, ограничения.
+- [Контракт для алгоритма и импорта](docs/INTEGRATION.md) — точки подключения участника 2.
+- [Окружение данных](backend/DATA_ENVIRONMENT.md) — исходная подготовка участника 2.
+- [API для фронтенда](docs/API.md), [OpenAPI](docs/openapi.json), [TypeScript-клиент](examples/api-client.ts).
+- [Объединение и настройки](docs/MERGE_NOTES.md) — что сохранено и как совместимы настройки.
+
+Код алгоритма добавляется в `backend/app/engine/`, импорта —
+`backend/app/importers/`, интерфейса — в `frontend/`. После добавления модулей
+нужно задать `ENGINE_MODULE` и `IMPORTER_MODULE` в `.env` и проверить реальный
+импорт. Пока их нет, импорт сообщает `503 integration_missing`.
