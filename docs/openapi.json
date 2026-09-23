@@ -3223,7 +3223,8 @@
                 "overview",
                 "recommendations",
                 "quality",
-                "scenario"
+                "scenario",
+                "exchange"
               ]
             },
             "type": "array",
@@ -3832,6 +3833,21 @@
           "supplier_id": {
             "type": "string",
             "title": "Supplier Id"
+          },
+          "data_mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "real",
+                  "synthetic"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Mode"
           },
           "status": {
             "type": "string",

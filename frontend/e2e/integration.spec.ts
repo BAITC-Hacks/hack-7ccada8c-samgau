@@ -37,7 +37,10 @@ test('156 -> shipment scenario 204 -> reset -> PATCH 168 -> Bearer CSV; reload',
   await page.getByLabel('Поиск товаров', { exact: true }).fill('00001');
   await expect(page.locator('tbody .order-qty')).toHaveText('156');
   await page.getByRole('button', { name: 'Что, если…', exact: true }).click();
-  await page.getByLabel('Поставщик', { exact: true }).selectOption('systeme_electric');
+  await page
+    .getByRole('dialog')
+    .getByLabel('Поставщик', { exact: true })
+    .selectOption('systeme_electric');
   const option = page
     .getByLabel('Выбранная поставка', { exact: true })
     .locator('option')
@@ -230,4 +233,45 @@ test('browser imports six XLSX into its own Bearer session', async ({ page }) =>
   });
   expect(response.status()).toBe(200);
   expect((await response.json()).source_count).toBe(6);
+});
+
+test('merged warehouse keeps canonical statuses and opens the correct product', async ({
+  page,
+}) => {
+  await ready(page);
+  const warehouse = page.getByRole('region', { name: 'Интерактивный 3D-склад' });
+  await expect(warehouse).toBeVisible();
+  await warehouse.getByRole('button', { name: 'Проверить данные', exact: true }).click();
+  await expect(warehouse.locator('.warehouse-bin')).toHaveCount(1);
+  await expect(warehouse.locator('.warehouse-inspector .warehouse-status')).toHaveText(
+    'Проверить данные',
+  );
+  await expect(warehouse.locator('.warehouse-order dd')).toHaveText('—');
+  await warehouse.getByRole('button', { name: 'Почему такой заказ?' }).click();
+  await expect(page.getByRole('dialog')).toContainText('00008');
+  await page.getByLabel('Закрыть окно').click();
+  await warehouse.getByRole('button', { name: 'Весь склад', exact: true }).click();
+  await expect(warehouse.locator('.warehouse-bin')).toHaveCount(8);
+  await warehouse.getByRole('button', { name: 'Повернуть склад вправо' }).click();
+  await expect(warehouse.locator('.warehouse-world')).toHaveAttribute('style', /-14deg/);
+});
+
+test('merged 1C exchange navigation, template, and assistant destination', async ({ page }) => {
+  await ready(page);
+  await page.getByRole('button', { name: 'Обмен с 1С', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Обмен с 1С', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Файлы выгрузок 1С')).toBeVisible();
+  await expect(page.getByLabel('Ключ загрузки администратора')).toBeVisible();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Скачать шаблон остатков' }).click();
+  const csv = await fs.readFile((await (await download).path())!, 'utf8');
+  expect(csv.trim()).toBe('sku_1c;stock_unit;available_stock;as_of;warehouse_id');
+  await page.getByRole('button', { name: 'ИИ-помощник', exact: true }).click();
+  await page.locator('textarea').fill('Как загрузить файлы 1С?');
+  await page.getByRole('button', { name: /Отправить/ }).click();
+  await expect(
+    page
+      .getByRole('log', { name: 'История диалога' })
+      .getByRole('button', { name: 'Обмен с 1С', exact: true }),
+  ).toBeVisible();
 });

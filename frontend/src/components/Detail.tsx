@@ -1,3 +1,4 @@
+import { dataMessage } from '../lib/dataMessages';
 import { useEffect, useState } from 'react';
 import {
   ArrowDown,
@@ -83,7 +84,7 @@ export function Detail({
       {[...(row.approval_blockers || []), ...row.warnings].map((w) => (
         <div className="notice" key={w}>
           <TriangleAlert size={16} />
-          <span>{w}</span>
+          <span>{dataMessage(w)}</span>
         </div>
       ))}
       <div className="formula">
@@ -116,7 +117,7 @@ export function Detail({
         </div>
         <b>=</b>
         <div className="formula-result">
-          <span>С округлением</span>
+          <span>К заказу</span>
           <strong>
             {row.available_stock === null ? '—' : number(row.recommended_qty)}{' '}
             <small>{row.unit}</small>

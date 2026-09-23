@@ -224,7 +224,9 @@ def create_app(settings=None, ai=None):
             p.update(status="completed", dataset_id=dataset_id, progress=100)
         except Exception as exc:
             log.error("Import failed: %s", type(exc).__name__)
-            p.update(status="failed", error="Импорт не завершён. Проверьте формат, настройки и контракт импортера.")
+            from .importers.partner import PartnerFormatError
+            message = str(exc) if isinstance(exc, PartnerFormatError) else "Импорт не завершён. Проверьте формат, настройки и контракт импортера."
+            p.update(status="failed", error=message)
         finally:
             try:
                 store.put("import", import_id, owner, p, v)
@@ -378,7 +380,7 @@ def create_app(settings=None, ai=None):
         if body.supplier_id != p["parameters"]["supplier_id"] or len(set(body.skus)) != len(body.skus):
             fail(422, "invalid_selection", "Проверьте поставщика и повторы товаров")
         lines = [{"recommendation": product(p, sku), "approved_qty": product(p, sku)["recommended_qty"], "reason": "", "edited_by": None} for sku in body.skus]
-        payload = {"run_id": body.run_id, "supplier_id": body.supplier_id, "status": "draft", "as_of": p["parameters"]["as_of"], "created_at": now(), "approved_at": None, "lines": lines, "audit": []}
+        payload = {"run_id": body.run_id, "supplier_id": body.supplier_id, "data_mode": p["data_mode"], "status": "draft", "as_of": p["parameters"]["as_of"], "created_at": now(), "approved_at": None, "lines": lines, "audit": []}
         key = uuid4().hex
         store.put("order", key, owner, payload)
         return order_response(get("order", key, owner))

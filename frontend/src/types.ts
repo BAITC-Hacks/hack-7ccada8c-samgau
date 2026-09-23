@@ -121,6 +121,7 @@ export interface Draft {
   draft_id: string;
   version: number;
   status: 'draft' | 'approved';
+  data_mode?: 'real' | 'synthetic' | null;
   run_id?: string;
   supplier_id?: string;
   lines?: { recommendation: Recommendation; approved_qty: number | null; reason: string }[];

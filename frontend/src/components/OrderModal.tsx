@@ -1,3 +1,4 @@
+import { dataMessage } from '../lib/dataMessages';
 import { useEffect, useState } from 'react';
 import { Check, Download, FileCheck2, LoaderCircle, ShieldCheck } from 'lucide-react';
 import type { DataMode, Draft, Gateway, Recommendation } from '../types';
@@ -12,11 +13,13 @@ export function OrderModal({
   mode,
   onClose,
   initialDraft,
+  synthetic = initialDraft?.data_mode === 'synthetic' || mode === 'demo',
 }: {
   rows: Recommendation[];
   gateway: Gateway;
   run: string;
   mode: DataMode;
+  synthetic?: boolean;
   onClose: () => void;
   initialDraft?: Draft;
 }) {
@@ -196,7 +199,7 @@ export function OrderModal({
       const blob = await gateway.exportDraft(draft.draft_id);
       downloadBlob(
         blob,
-        `QOR-${mode === 'demo' ? 'DEMO-' : ''}${supplier}-${draft.draft_id.slice(0, 8)}.csv`,
+        `QOR-${currentDraft?.data_mode === 'synthetic' || synthetic ? 'DEMO-' : ''}${supplier}-${draft.draft_id.slice(0, 8)}.csv`,
       );
       setDownloaded(true);
     } catch (e) {
@@ -232,10 +235,10 @@ export function OrderModal({
           </button>
         ))}
       </div>
-      {mode === 'demo' && (
+      {(currentDraft?.data_mode === 'synthetic' || synthetic) && (
         <div className="notice">
-          <ShieldCheck size={16} /> Демонстрационный заказ. Сохраняется до обновления страницы и не
-          отправляется поставщику.
+          <ShieldCheck size={16} /> Синтетический тестовый заказ. Для реальной закупки загрузите
+          данные компании.
         </div>
       )}
       <div className="order-lines">
@@ -245,6 +248,10 @@ export function OrderModal({
               <strong>{r.name}</strong>
               <span>
                 {r.supplier_article} · рекомендовано {number(r.recommended_qty)} {r.unit}
+                {' · минимум '}
+                {number(r.moq ?? null)}
+                {' · шаг '}
+                {number(r.order_step ?? null)}
               </span>
             </div>
             <label className="amount-input">
@@ -288,7 +295,7 @@ export function OrderModal({
       </p>
       {warnings.map((w) => (
         <div className="notice" key={w}>
-          {w}
+          {dataMessage(w)}
         </div>
       ))}
       {!draft && needsAcknowledgement && (

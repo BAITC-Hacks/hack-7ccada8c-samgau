@@ -1,7 +1,7 @@
 import { ApiError, request } from './api';
 import type { Dataset, Recommendation, Run, Scenario } from '../types';
 
-export type ChatDestination = 'overview' | 'recommendations' | 'quality' | 'scenario';
+export type ChatDestination = 'overview' | 'recommendations' | 'quality' | 'scenario' | 'exchange';
 export interface ChatAnswer {
   text: string;
   destinations: ChatDestination[];
