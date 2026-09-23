@@ -1,4 +1,9 @@
 <p align="center">
+  <strong><a href="https://qor.152.70.57.1.sslip.io">Открыть QOR AI — рабочее демо</a></strong><br />
+  Публичный сайт с HTTPS · серверный расчёт на синтетических данных
+</p>
+
+<p align="center">
   <img src="docs/assets/qor-logo.jpg" alt="Логотип QOR ai" width="193" />
 </p>
 
@@ -8,7 +13,7 @@
 
 <p align="center">
   <strong>Объяснимый помощник закупщика</strong><br />
-  От истории продаж и остатков — к обоснованному заказу поставщику.
+  От истории продаж и остатков - к обоснованному заказу поставщику.
 </p>
 
 <p align="center">
@@ -22,7 +27,7 @@
 
 <p align="center"><code>React + TypeScript</code> &nbsp; <code>FastAPI + Python</code> &nbsp; <code>SQLite</code> &nbsp; <code>OpenAI / NVIDIA</code></p>
 
-> **Статус: MVP.** React подключён к FastAPI через Bearer-сессию. Реализованы расчёт, интерактивный 3D-склад, импорт исходных XLSX и выгрузка утверждённого CSV. Общий Docker Compose собирает React + FastAPI + Caddy. Живой вызов ИИ, публичный HTTPS и совместимость CSV с обработкой конкретной базы 1С требуют отдельной проверки. [Файловый обмен и запуск →](docs/ONE_C_EXCHANGE.md) · [План и критерии интеграции →](docs/CAPTAIN_UI_INTEGRATION.md)
+> **Статус: MVP.** React подключён к FastAPI через Bearer-сессию. Реализованы расчёт, интерактивный 3D-склад, импорт исходных XLSX и выгрузка утверждённого CSV. Общий Docker Compose собирает React + FastAPI + Caddy. Публичный HTTPS и загрузка серверного расчёта в браузере проверены 23.09.2026. OpenAI настроен на сервере; настоящий вызов при развёртывании не проверялся. Совместимость CSV с обработкой конкретной базы 1С требует отдельной проверки. [Файловый обмен и запуск →](docs/ONE_C_EXCHANGE.md) · [План и критерии интеграции →](docs/CAPTAIN_UI_INTEGRATION.md)
 
 <a id="idea"></a>
 ## <img src="docs/assets/idea.svg" alt="01 — Идея проекта" width="100%" />
