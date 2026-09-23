@@ -28,7 +28,6 @@ import {
   SlidersHorizontal,
   Sparkles,
   TriangleAlert,
-  Truck,
   X,
 } from 'lucide-react';
 import type {
@@ -50,6 +49,7 @@ import { Detail } from './components/Detail';
 import { Modal } from './components/Modal';
 import { ScenarioModal } from './components/ScenarioModal';
 import { OrderModal } from './components/OrderModal';
+import { InventorySummary } from './components/InventorySummary';
 
 type View = 'overview' | 'recommendations' | 'quality';
 const initialMode: DataMode = import.meta.env.VITE_DATA_MODE === 'api' ? 'api' : 'demo';
@@ -297,15 +297,17 @@ export default function App() {
           <span className="nav-label">ПЛАНИРОВАНИЕ</span>
           <button
             className={view === 'overview' ? 'active' : ''}
+            aria-current={view === 'overview' ? 'page' : undefined}
             onClick={() => navigate('overview')}
           >
-            <LayoutDashboard size={18} /> Обзор <span className="nav-active-dot" />
+            <LayoutDashboard size={20} /> Обзор склада <span className="nav-active-dot" />
           </button>
           <button
             className={view === 'recommendations' ? 'active' : ''}
+            aria-current={view === 'recommendations' ? 'page' : undefined}
             onClick={() => navigate('recommendations')}
           >
-            <Package size={18} /> Рекомендации{' '}
+            <Package size={20} /> План закупок{' '}
             {summary && <span className="nav-count">{summary.order_skus}</span>}
           </button>
           <button
@@ -315,14 +317,15 @@ export default function App() {
             }}
             disabled={!run || loading || busy}
           >
-            <SlidersHorizontal size={18} /> Сценарии <span className="nav-new">NEW</span>
+            <SlidersHorizontal size={20} /> Что, если…
           </button>
           <span className="nav-label second">ДАННЫЕ И КОНТРОЛЬ</span>
           <button
             className={view === 'quality' ? 'active' : ''}
+            aria-current={view === 'quality' ? 'page' : undefined}
             onClick={() => navigate('quality')}
           >
-            <Database size={18} /> Качество данных{' '}
+            <Database size={20} /> Проверка данных{' '}
             {summary && summary.review_skus > 0 && <span className="nav-warning" />}
           </button>
         </nav>
@@ -357,24 +360,34 @@ export default function App() {
       </aside>
       <div className="main-shell">
         <header className="topbar">
-          <div className="breadcrumb">
-            <button
-              className="icon-button mobile-menu"
-              aria-label="Открыть меню"
-              onClick={() => setNavOpen(true)}
-            >
-              <PanelLeftClose size={20} />
+          <button
+            className="icon-button mobile-menu"
+            aria-label="Открыть меню"
+            onClick={() => setNavOpen(true)}
+          >
+            <PanelLeftClose size={20} />
+          </button>
+          <form
+            className="global-search"
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              setFilter('all');
+              setSupplier('all');
+              navigate('recommendations');
+            }}
+          >
+            <Search size={20} aria-hidden="true" />
+            <input
+              aria-label="Найти товар в плане закупок"
+              placeholder="Поиск товара или артикула…"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <button type="submit" aria-label="Перейти к результатам поиска">
+              Найти <ArrowRight size={16} />
             </button>
-            <span>Рабочее пространство</span>
-            <ChevronRight size={13} />
-            <strong>
-              {view === 'overview'
-                ? 'Обзор закупок'
-                : view === 'quality'
-                  ? 'Качество данных'
-                  : 'Рекомендации'}
-            </strong>
-          </div>
+          </form>
           <div className="top-actions">
             <span className="status-dot" />
             <span className="top-status">
@@ -393,18 +406,18 @@ export default function App() {
         <main className="main-content">
           <div className="page-heading">
             <div>
-              <span className="eyebrow">SUPPLY INTELLIGENCE</span>
+              <span className="eyebrow">РАБОЧЕЕ ПРОСТРАНСТВО / ЭЛЕКТРОКОМПЛЕКТ</span>
               <h1>
                 {view === 'quality'
-                  ? 'Доверяйте данным.'
+                  ? 'Проверка данных'
                   : view === 'recommendations'
-                    ? 'От прогноза к заказу.'
-                    : 'Закупайте с уверенностью.'}
+                    ? 'План закупок'
+                    : 'Обзор склада'}
               </h1>
               <p>
                 {view === 'quality'
                   ? 'Источники, ограничения и всё, что требует вашего внимания.'
-                  : 'Нужный товар. В нужном количестве. В нужный момент.'}
+                  : 'Остатки, прогноз и закупки — всё перед вами.'}
               </p>
             </div>
             <div className="heading-actions">
@@ -516,7 +529,7 @@ export default function App() {
                   <section className="quality-view panel">
                     <div className="section-title">
                       <div>
-                        <span className="eyebrow">DATA HEALTH</span>
+                        <span className="eyebrow">КАЧЕСТВО ИСТОЧНИКОВ</span>
                         <h2>Паспорт набора данных</h2>
                       </div>
                       <Database size={24} />
@@ -593,7 +606,7 @@ export default function App() {
                             icon={<Package size={18} />}
                             label="К заказу"
                             value={summary?.order_skus || 0}
-                            unit="позиций"
+                            unit="поз."
                             note="Рекомендовано к пополнению"
                             trend="Сформирован план"
                             tone="green"
@@ -602,7 +615,7 @@ export default function App() {
                             icon={<TriangleAlert size={18} />}
                             label="Риск дефицита"
                             value={summary?.risk_skus || 0}
-                            unit="SKU"
+                            unit="поз."
                             note="Запас закончится до поставки"
                             trend="Требуют внимания"
                             tone="orange"
@@ -611,7 +624,7 @@ export default function App() {
                             icon={<Activity size={18} />}
                             label="Разовые покупки"
                             value={summary?.anomaly_count || 0}
-                            unit="заказа"
+                            unit="заказ."
                             note="Выделены из регулярного спроса"
                             trend="Прогноз без искажений"
                             tone="blue"
@@ -620,13 +633,18 @@ export default function App() {
                             icon={<ShieldCheck size={18} />}
                             label="Проверить данные"
                             value={summary?.review_skus || 0}
-                            unit="SKU"
+                            unit="поз."
                             note="Недостаточно данных для заказа"
                             trend="Нужна проверка"
                             tone="neutral"
                           />
                         </section>
                         <div className="analysis-grid">
+                          <InventorySummary
+                            rows={rows}
+                            busy={busy}
+                            onScenario={() => setScenarioOpen(true)}
+                          />
                           <section className="panel forecast-panel">
                             <div className="section-title">
                               <div>
@@ -707,46 +725,6 @@ export default function App() {
                                 Почему так? <ArrowUpRight size={14} />
                               </button>
                             </div>
-                          </section>
-                          <section className="scenario-card">
-                            <div className="scenario-card-head">
-                              <span>
-                                <Sparkles size={17} /> ЛАБОРАТОРИЯ СЦЕНАРИЕВ
-                              </span>
-                              <ArrowUpRight size={20} />
-                            </div>
-                            <h2>
-                              А что, если
-                              <br />
-                              поставка опоздает?
-                            </h2>
-                            <p>
-                              Проверьте решение до закупки.
-                              <br />
-                              Один сценарий — понятные последствия.
-                            </p>
-                            <div className="supply-illustration" aria-hidden="true">
-                              <div className="route-line" />
-                              <div className="route-node route-start">
-                                <Package size={24} />
-                              </div>
-                              <div className="route-tag">+7 дней</div>
-                              <div className="truck-node">
-                                <Truck size={31} />
-                              </div>
-                              <div className="route-node route-end">
-                                <Boxes size={24} />
-                              </div>
-                              <span className="route-label left">Поставщик</span>
-                              <span className="route-label right">Ваш склад</span>
-                            </div>
-                            <button onClick={() => setScenarioOpen(true)} disabled={busy}>
-                              <span>Проверить сценарий</span>
-                              <ArrowRight size={18} />
-                            </button>
-                            <span className="scenario-caption">
-                              Задержка поставки · изменение спроса
-                            </span>
                           </section>
                         </div>
                       </>

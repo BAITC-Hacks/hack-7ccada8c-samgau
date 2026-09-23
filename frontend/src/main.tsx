@@ -10,7 +10,7 @@ import '@fontsource/golos-text/cyrillic-600.css';
 import '@fontsource/golos-text/latin-700.css';
 import '@fontsource/golos-text/cyrillic-700.css';
 import './styles.css';
-import './readability.css';
+import './dashboard-theme.css';
 class ErrorBoundary extends React.Component<React.PropsWithChildren, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
