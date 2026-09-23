@@ -52,6 +52,7 @@ import { ScenarioModal } from './components/ScenarioModal';
 import { OrderModal } from './components/OrderModal';
 import { InventorySummary } from './components/InventorySummary';
 import { Assistant } from './components/Assistant';
+import { WarehouseScene } from './components/WarehouseScene';
 
 type View = 'overview' | 'recommendations' | 'quality' | 'assistant';
 const initialMode: DataMode = import.meta.env.VITE_DATA_MODE === 'api' ? 'api' : 'demo';
@@ -668,6 +669,13 @@ export default function App() {
                             tone="neutral"
                           />
                         </section>
+                        <WarehouseScene
+                          rows={rows}
+                          scenario={activeScenario}
+                          busy={busy}
+                          onProduct={setDetail}
+                          onScenario={() => setScenarioOpen(true)}
+                        />
                         <div className="analysis-grid">
                           <InventorySummary
                             rows={rows}
