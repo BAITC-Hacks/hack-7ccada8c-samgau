@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.DS_Store
+# Local source files and persisted commercial data are not published.
+data/
+*.sqlite3
+*.sqlite3-*
+

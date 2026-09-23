@@ -1,0 +1,7 @@
+# Participant 2: import, validation, deterministic calculations and verification.
+# requirements-data.lock pins the complete dependency graph.
+numpy>=2,<3
+pandas>=2.2,<3
+openpyxl>=3.1,<4
+pydantic>=2,<3
+pytest>=8,<10
