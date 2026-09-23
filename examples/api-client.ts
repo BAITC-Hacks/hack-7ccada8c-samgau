@@ -41,12 +41,12 @@ export class QorApi {
     return r.json();
   }
 
-  async importFiles(files: File[], fields: Record<string, string>, adminToken: string) {
+  async importFiles(files: File[], fields: Record<string, string>) {
     const form = new FormData();
     files.forEach(file => form.append("files", file));
     Object.entries(fields).forEach(([key, value]) => form.append(key, value));
     const r = await this.response("/api/imports", {
-      method: "POST", headers: { "X-Admin-Token": adminToken }, body: form,
+      method: "POST", body: form,
     });
     return r.json();
   }

@@ -195,6 +195,10 @@ export function Exchange({ onOpen }: { onOpen: (dataset: Dataset) => void }) {
               ))}
             </ul>
           )}
+          <p className="small muted">
+            По умолчанию загрузка доступна без ключа администратора. Набор виден только в вашей
+            сессии браузера.
+          </p>
           {error && (
             <div role="alert" className="error-box">
               {error}

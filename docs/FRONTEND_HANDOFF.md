@@ -94,14 +94,17 @@ comparison. Сценарий заменяет предыдущие параме�
 
 ## Импорт
 
-Отдельный администраторский процесс. `ADMIN_TOKEN` не включать в сборку/VITE_*.
-`POST /api/imports`: Bearer + X-Admin-Token. Multipart-поля: **supplier**,
+По умолчанию `IMPORT_ACCESS=session`: доступен каждому посетителю без ключа администратора; набор виден только его сессии.
+`POST /api/imports`: Bearer автоматически созданной сессии. До 6 попыток/мин на сессию и 20 на сервер. Multipart-поля: **supplier**,
 mapping_version, as_of, warehouse_id, повторяющееся поле files. Не supplier_id.
 При FormData не задавать Content-Type вручную — браузер добавляет boundary.
 Встроенный профиль `qor-explicit-xlsx-v1`: шесть XLSX с `_QOR_IMPORT` на одного
 поставщика. CSV и произвольные реальные выгрузки им не поддерживаются.
 Ответ 202 → import_id; опрашивать `/api/imports/{id}` до completed/failed/interrupted.
 При completed использовать dataset_id. Прогресс дискретный 0/100.
+При явном `IMPORT_ACCESS=admin` API дополнительно требует `X-Admin-Token`,
+совпадающий с серверным `ADMIN_TOKEN`. UI не запрашивает ключ и показывает отказ;
+импорт в этом режиме выполняется отдельным API-клиентом.
 
 ## Приёмка UI
 

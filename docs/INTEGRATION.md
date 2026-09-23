@@ -127,7 +127,7 @@ scenario.shipment_id, scenario.delay_days, scenario.demand_change_pct.
 
 1. Добавить закреплённые зависимости в `backend/requirements-engine.txt`.
 2. Выставить `.env`: `ENGINE_MODULE=app.engine.service`, `IMPORTER_MODULE=app.importers.service`.
-3. Перезапустить сервер. Импортировать набор через POST /api/imports с Bearer и X-Admin-Token.
+3. Перезапустить сервер. Импортировать набор через POST /api/imports с Bearer автоматически созданной сессии. По умолчанию `IMPORT_ACCESS=session`, административный ключ не нужен; при явном `IMPORT_ACCESS=admin` добавить `X-Admin-Token` из серверного `ADMIN_TOKEN`. Лимиты: 6 попыток/мин на сессию и 20 на сервер.
 4. Дождаться completed, взять dataset_id, вызвать POST /api/runs.
 5. Проверить сценарий, объяснение, черновик, approve, CSV.
 6. Выполнить `python -m pytest`, затем `python scripts/smoke.py` при запущенном API.

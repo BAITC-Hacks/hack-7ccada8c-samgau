@@ -15,7 +15,7 @@ class Settings:
     database_path: Path | None = field(default_factory=lambda: Path(os.environ["DATABASE_PATH"]).resolve() if os.getenv("DATABASE_PATH") else None)
     app_env: str = field(default_factory=lambda: os.getenv("APP_ENV", "development"))
     admin_token: str = field(default_factory=lambda: os.getenv("ADMIN_TOKEN", ""))
-    import_access: str = field(default_factory=lambda: os.getenv("IMPORT_ACCESS", "admin"))
+    import_access: str = field(default_factory=lambda: os.getenv("IMPORT_ACCESS", "session"))
     engine_module: str = field(default_factory=lambda: os.getenv("ENGINE_MODULE") or "app.engine.service")
     importer_module: str = field(default_factory=lambda: os.getenv("IMPORTER_MODULE") or "app.importers.service")
     cors_origins: list[str] = field(default_factory=lambda: [x.strip() for x in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if x.strip()])

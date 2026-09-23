@@ -192,13 +192,13 @@ def test_archive_resource_limit_before_xml_parsing(workbooks, tmp_path):
 
 def test_real_plugins_through_captain_import_calculate_approve_export(workbooks, tmp_path):
     settings = Settings(data_dir=tmp_path, database_path=tmp_path / 'qor.sqlite3', ai_provider='disabled',
-        engine_module='app.engine.service', importer_module='app.importers.service', admin_token='test-admin')
+        engine_module='app.engine.service', importer_module='app.importers.service')
     app = create_app(settings)
     req = request_for(workbooks)
     with TestClient(app) as client:
         token = client.post('/api/sessions').json()['token']
         headers = {'Authorization': f'Bearer {token}'}
-        response = client.post('/api/imports', headers={**headers, 'X-Admin-Token': 'test-admin'},
+        response = client.post('/api/imports', headers=headers,
             data={'supplier': req.supplier_id, 'mapping_version': MAPPING_VERSION,
                   'as_of': AS_OF.isoformat(), 'warehouse_id': req.warehouse_id},
             files=[('files', (f.original_name, f.path.read_bytes(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) for f in req.files])

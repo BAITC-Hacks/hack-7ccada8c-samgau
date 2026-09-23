@@ -237,7 +237,7 @@ def create_app(settings=None, ai=None):
 
     @app.post("/api/imports", status_code=202, tags=["data"], dependencies=[Depends(import_permission)], response_model=ImportResponse)
     async def start_import(files: list[UploadFile] = File(...), supplier: str = Form(...), mapping_version: str = Form(...), as_of: date = Form(...), warehouse_id: str = Form(...), owner=Depends(session)):
-        limited(("imports", owner), 4)
+        limited(("imports", owner), 6)
         limited(("imports", "global"), 20)
         if not settings.importer_module or not settings.engine_module:
             fail(503, "integration_missing", "Задайте IMPORTER_MODULE и ENGINE_MODULE")

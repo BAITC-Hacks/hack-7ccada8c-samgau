@@ -1,4 +1,8 @@
-"""Check 12 generated synthetic XLSX over HTTP. Requires ADMIN_TOKEN in the environment."""
+"""Check 12 generated synthetic XLSX over HTTP with default IMPORT_ACCESS=session.
+
+Creates a visitor session without an admin key (6 import attempts/minute per
+session, 20 per server). Optional IMPORT_ACCESS=admin is not supported by this smoke.
+"""
 import argparse
 import json
 import os
@@ -7,8 +11,6 @@ import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from uuid import uuid4
-
-from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 from app.engine.demo import AS_OF
@@ -37,7 +39,6 @@ def main():
     parser.add_argument("--state-file", type=Path, help="Optional local state for --resume; contains a session token")
     parser.add_argument("--resume", action="store_true", help="Check persisted data after API restart")
     args = parser.parse_args()
-    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
     client = Client(args.url)
     if args.resume:
         if not args.state_file:
@@ -54,9 +55,6 @@ def main():
         assert b";168.0;" in client.call("GET", f'/api/orders/{state["order_id"]}/export.csv')
         print("PASS: imported datasets, session, runs and approved CSV survived restart")
         return
-    admin = os.getenv("ADMIN_TOKEN")
-    if not admin:
-        parser.error("Set ADMIN_TOKEN in the process environment to match the server")
     client.session()
     state = {"token": client.token, "imports": []}
     with TemporaryDirectory(prefix="qor-synthetic-") as temp:
@@ -65,7 +63,7 @@ def main():
             fields = {"supplier": supplier, "mapping_version": MAPPING_VERSION,
                       "as_of": AS_OF.isoformat(), "warehouse_id": "synthetic-almaty"}
             body, content_type = multipart([p for s, p, _ in books if s == supplier], fields)
-            headers = {"X-Admin-Token": admin, "Content-Type": content_type}
+            headers = {"Content-Type": content_type}
             job = client.call("POST", "/api/imports", body, headers=headers)
             deadline = time.monotonic() + 120
             while job["status"] in ("queued", "running") and time.monotonic() < deadline:

@@ -21,7 +21,7 @@ from app.storage import Conflict, Store
 
 @pytest.fixture
 def settings(tmp_path):
-    return Settings(data_dir=tmp_path, ai_provider="disabled", engine_module="", importer_module="", admin_token="test-admin", import_access="admin")
+    return Settings(data_dir=tmp_path, ai_provider="disabled", engine_module="", importer_module="")
 
 
 @pytest.fixture
@@ -213,9 +213,8 @@ def test_import_plugin_dedup_scope_and_run(settings, monkeypatch):
         h = auth(c)
         fields = {"supplier": "IEK", "mapping_version": "test-v1", "as_of": "2026-09-22", "warehouse_id": "almaty"}
         files = {"files": ("sample.csv", b"sku,quantity\n0001_,10", "text/csv")}
-        assert c.post("/api/imports", headers=h, data=fields, files=files).status_code == 403
-        admin = {**h, "X-Admin-Token": "test-admin"}
-        response = c.post("/api/imports", headers=admin, data=fields, files=files)
+        assert c.post("/api/imports", data=fields, files=files).status_code == 401
+        response = c.post("/api/imports", headers=h, data=fields, files=files)
         assert response.status_code == 202, response.text
         iid = response.json()["import_id"]
         for _ in range(100):
@@ -230,13 +229,32 @@ def test_import_plugin_dedup_scope_and_run(settings, monkeypatch):
         # No commercial facts leave the server, even with API enabled later.
         explained = c.post(f"/api/runs/{rid}/explain", headers=h, json={"sku": "0001_"}).json()
         assert explained["status"] == "fallback" and "реальных" in explained["message"]
-        second = c.post("/api/imports", headers=admin, data=fields, files=files)
+        second = c.post("/api/imports", headers=h, data=fields, files=files)
         assert second.json()["deduplicated"] and second.json()["dataset_id"] == dsid
         assert len(imported) == 1
         b = auth(c)
         assert dsid not in str(c.get("/api/datasets", headers=b).json())
         assert c.get(f"/api/datasets/{dsid}/quality", headers=b).status_code == 404
         assert c.get(f"/api/imports/{iid}", headers=b).status_code == 404
+
+
+def test_public_upload_limits_and_session_rate_limit(tmp_path, monkeypatch):
+    monkeypatch.delenv("IMPORT_ACCESS", raising=False)
+    settings = Settings(data_dir=tmp_path, database_path=None, ai_provider="disabled", max_upload_bytes=8)
+    assert settings.import_access == "session"
+    with TestClient(create_app(settings)) as c:
+        h = auth(c)
+        fields = {"supplier": "iek", "mapping_version": "qor-explicit-xlsx-v1", "as_of": "2026-09-22", "warehouse_id": "test"}
+        invalid = {"files": ("script.exe", b"bad", "application/octet-stream")}
+        assert c.post("/api/imports", headers=h, data=fields, files=invalid).json()["error"]["code"] == "file_type"
+        oversized = {"files": ("data.csv", b"123456789", "text/csv")}
+        assert c.post("/api/imports", headers=h, data=fields, files=oversized).status_code == 413
+        for _ in range(4):
+            assert c.post("/api/imports", headers=h, data=fields, files=invalid).status_code == 422
+        assert c.post("/api/imports", headers=h, data=fields, files=invalid).status_code == 429
+        # Another visitor keeps their own quota; rejected files leave no upload directories.
+        assert c.post("/api/imports", headers=auth(c), data=fields, files=invalid).status_code == 422
+        assert list((tmp_path / "uploads").iterdir()) == []
 
 
 @pytest.mark.parametrize("value", ["=HYPERLINK(\"https://example.com\")", "  +CMD", "@SUM(1)", "\tformula", "-1+2"])

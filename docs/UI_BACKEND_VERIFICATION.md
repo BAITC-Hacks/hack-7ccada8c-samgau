@@ -27,7 +27,7 @@
 | Предупреждения / approve | POST `/api/orders/{id}/approve` | Отдельный checkbox после вывода предупреждений; acknowledge_warnings не включается автоматически. Блокеры не снимаются ручным количеством или подтверждением. |
 | Версии / восстановление | GET `/api/orders`, GET `/api/orders/{id}` | 409 перечитывает snapshot и требует нового действия. 401/422/500 показываются. Сохранённые заказы открываются после reload; утверждённые значения отображаются из серверного snapshot. Локально сохраняются компактные ссылки, а не история/траектория каждого товара. |
 | CSV | GET `/api/orders/{id}/export.csv` | Bearer fetch → Blob только после approve; ведущие нули SKU, единицы и утверждённое количество берутся с сервера. |
-| Импорт | POST `/api/imports` → GET `/api/imports/{id}` | UI: шесть XLSX одного supplier, FormData, временный admin token, опрос queued/running, completed/failed/interrupted. Завершённый dataset выбирается в той же браузерной сессии. |
+| Импорт | POST `/api/imports` → GET `/api/imports/{id}` | UI: шесть XLSX одного supplier, FormData, автоматически созданная Bearer-сессия без административного ключа, опрос queued/running, completed/failed/interrupted. Завершённый dataset выбирается в той же браузерной сессии. |
 | Production | `compose.yaml`, `deploy/Dockerfile.web`, Caddy | Node 22 build → Caddy static React; same-origin `/api` → FastAPI; API без внешнего порта; постоянные SQLite/uploads и Caddy volumes. `deploy/web` не перекрывает сборку. |
 
 ## Повторяемый локальный прогон
@@ -45,9 +45,12 @@ npm --prefix frontend run build
 cd frontend && npx playwright install chromium && cd ..
 ```
 
-Существующие `.venv` и `.env` не перезаписывать. Для импорта нужен непустой
-`ADMIN_TOKEN` в `.env`; в тестовом окружении — отдельный случайный токен.
-Без `.env` Compose работает с отключённым ИИ и недоступным admin-импортом.
+Существующие `.venv` и `.env` не перезаписывать. По умолчанию `IMPORT_ACCESS=session`:
+импорт доступен каждому посетителю в автоматически созданной сессии без административного ключа.
+Без `.env` Compose работает с отключённым ИИ; импорт доступен.
+Лимиты импорта: 6 попыток/мин на сессию и 20 на сервер. Команды проверки ниже
+предназначены для режима `session`. При явном `IMPORT_ACCESS=admin` API дополнительно
+требует `X-Admin-Token` из серверного `ADMIN_TOKEN`, а загрузка через UI недоступна.
 
 ```sh
 HTTP_PORT=18080 HTTPS_PORT=18443 docker compose -p qor-integration-test up --build -d

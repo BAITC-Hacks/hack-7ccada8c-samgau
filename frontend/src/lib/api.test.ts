@@ -182,9 +182,9 @@ describe('canonical API adapter', () => {
     await request('/imports', {
       method: 'POST',
       body: new FormData(),
-      headers: { 'X-Admin-Token': 'test' },
     });
     expect(new Headers(fetch.mock.calls[0][1].headers).has('Content-Type')).toBe(false);
+    expect(new Headers(fetch.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer token');
     expect(await (await api.exportDraft('draft')).text()).toContain('168');
     expect(new Headers(fetch.mock.calls[1][1].headers).get('Authorization')).toBe('Bearer token');
   });

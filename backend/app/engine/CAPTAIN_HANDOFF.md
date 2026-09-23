@@ -120,7 +120,10 @@ PYTHONPATH=backend .venv/bin/python -m app.importers.demo_files --output-dir dat
 
 Генератор создаёт 12 синтетических книг: по шесть для каждого поставщика.
 Загружай через `POST /api/imports` шесть XLSX выбранного поставщика с Bearer
-и `X-Admin-Token`. Поля формы:
+автоматически созданной сессии. По умолчанию `IMPORT_ACCESS=session`, административный
+ключ не нужен. При явном `IMPORT_ACCESS=admin` API дополнительно требует
+`X-Admin-Token` из серверного `ADMIN_TOKEN`. Лимиты: 6 попыток/мин на сессию
+и 20 на сервер. Поля формы:
 
 - `supplier`: `iek` или `systeme_electric` (имя multipart-поля API);
 - `mapping_version`: `qor-explicit-xlsx-v1`;

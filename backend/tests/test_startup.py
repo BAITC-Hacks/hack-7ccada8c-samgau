@@ -49,11 +49,10 @@ def test_misconfigured_engine_fails_at_startup(tmp_path, module):
 
 
 def test_upload_directory_failure_does_not_lock_all_future_imports(monkeypatch, tmp_path):
-    settings = Settings(data_dir=tmp_path, database_path=None, admin_token="test-admin")
+    settings = Settings(data_dir=tmp_path, database_path=None)
     app = create_app(settings)
     with TestClient(app, raise_server_exceptions=False) as client:
-        headers = {"Authorization": "Bearer " + client.post("/api/sessions").json()["token"],
-                   "X-Admin-Token": "test-admin"}
+        headers = {"Authorization": "Bearer " + client.post("/api/sessions").json()["token"]}
         original = Path.mkdir
         failed = False
 

@@ -27,7 +27,7 @@
 | GET | /api/datasets | items: id, name, mode, as_of, warehouse_id, supplier_ids, version, engine_backend |
 | GET | /api/datasets/{id}/quality | Отчёт импортера по качеству |
 | GET | /api/datasets/{id}/shipments | Партии для выбора сценария |
-| POST | /api/imports | Multipart files[], supplier, mapping_version, as_of, warehouse_id; плюс X-Admin-Token |
+| POST | /api/imports | Multipart files[], supplier, mapping_version, as_of, warehouse_id; Bearer автоматически созданной сессии; по умолчанию без ключа администратора; до 6 попыток/мин на сессию и 20 на сервер |
 | GET | /api/imports/{id} | queued/running/completed/failed/interrupted; dataset_id при завершении |
 | POST | /api/runs | dataset_id, supplier_id, as_of, L/R/страховые дни, опционально scenario |
 | GET | /api/runs/{id} | Метаданные, параметры, summary, версия алгоритма |
@@ -42,6 +42,10 @@
 | PATCH | /api/orders/{id} | version, changes: sku/approved_qty/reason |
 | POST | /api/orders/{id}/approve | version, acknowledge_warnings |
 | GET | /api/orders/{id}/export.csv | Только утверждённый снимок |
+
+По умолчанию `IMPORT_ACCESS=session`: импорт доступен посетителю в своей сессии.
+При явном `IMPORT_ACCESS=admin` дополнительно нужен `X-Admin-Token`, совпадающий
+с серверным `ADMIN_TOKEN`; интерфейс ключ не запрашивает, загрузка через UI в этом режиме недоступна.
 
 Импорт возвращает 202, вычисления выполняются синхронно и возвращают 201.
 Прогресс импорта в платформе дискретный 0/100; точного построчного прогресса нет.
@@ -95,7 +99,7 @@ blocked нельзя снять подтверждением предупреж�
 {"error":{"code":"version_conflict","message":"Черновик изменён. Обновите его и повторите действие.","fields":[]}}
 ```
 
-401 — нет/истекла сессия; 403 — нет admin-токена; 404 — объект не найден/чужой;
+401 — нет/истекла сессия; 403 — нет/неверен admin-токен при `IMPORT_ACCESS=admin`; 404 — объект не найден/чужой;
 409 — конфликт; 413 — лимит размера; 422 — неверные данные; 429 — лимит запросов;
 502 — расчётный модуль нарушил контракт; 503 — интеграция ещё не подключена.
 Ошибки инфраструктуры до приложения, например Caddy 413, могут иметь не-JSON тело.

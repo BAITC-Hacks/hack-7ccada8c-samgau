@@ -220,6 +220,7 @@ test('browser imports six XLSX into its own Bearer session', async ({ page }) =>
   await ready(page);
   const token = await page.evaluate(() => sessionStorage.getItem('qor-bearer-session'));
   await page.getByRole('button', { name: 'Импорт XLSX', exact: true }).click();
+  await expect(page.getByLabel('Ключ администратора')).toHaveCount(0);
   await page.getByRole('dialog').getByRole('combobox').selectOption('iek');
   await page.getByLabel('Шесть файлов XLSX').setInputFiles(files);
   await page.getByRole('button', { name: 'Загрузить и проверить', exact: true }).click();
