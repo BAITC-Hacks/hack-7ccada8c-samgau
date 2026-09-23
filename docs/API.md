@@ -1,8 +1,15 @@
 # API v1.0 — для frontend
 
 Источник схем: `/api/openapi.json` и `docs/openapi.json`.
-Основные входы и ответы типизированы Pydantic; модели общих данных — contracts.py.
+Входы, ответы импорта/расчёта/заказов и формат ошибок типизированы Pydantic; модели общих данных — contracts.py.
 Даты ISO 8601, числа JSON, неизвестное значение null.
+
+## Основной набор
+
+`demo-engine-v1`: supplier_ids `iek`, `systeme_electric`, дата `2026-09-22`,
+склад `synthetic-almaty`. Движок `qor-mvp-1.0`; один run на одного поставщика.
+Не отправляйте `all` или `null`. Все фактические ID и дату берите из datasets.
+Полный порядок интеграции — [FRONTEND_HANDOFF.md](FRONTEND_HANDOFF.md).
 
 ## Сессия
 
@@ -38,12 +45,15 @@
 
 Импорт возвращает 202, вычисления выполняются синхронно и возвращают 201.
 Прогресс импорта в платформе дискретный 0/100; точного построчного прогресса нет.
+Встроенный профиль `qor-explicit-xlsx-v1` принимает шесть XLSX одного поставщика
+с явным маппингом `_QOR_IMPORT`. Произвольные реальные выгрузки и CSV этим
+профилем не поддерживаются.
 Пример multipart: repeated form key `files`, не JSON-строка `files[]`.
 
 ## Сценарий
 
 ```json
-{"shipment_id":"demo-shipment-1","delay_days":20,"demand_change_pct":0}
+{"shipment_id":"ID_ИЗ_GET_SHIPMENTS","delay_days":30,"demand_change_pct":0}
 ```
 
 Задержка 0–365 дней, спрос от −90% до +300%. Без партии задержка запрещена.
@@ -60,13 +70,13 @@
 Создать:
 
 ```json
-{"run_id":"ID","supplier_id":"IEK","skus":["0001_"]}
+{"run_id":"ID","supplier_id":"systeme_electric","skus":["00001"]}
 ```
 
 Изменить:
 
 ```json
-{"version":1,"changes":[{"sku":"0001_","approved_qty":168,"reason":"Дополнительный запас"}]}
+{"version":1,"changes":[{"sku":"00001","approved_qty":168,"reason":"Дополнительный запас"}]}
 ```
 
 Утвердить:
