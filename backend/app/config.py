@@ -23,6 +23,7 @@ class Settings:
     ai_key: str = field(default_factory=lambda: provider_setting("API_KEY"))
     ai_model: str = field(default_factory=lambda: provider_setting("MODEL"))
     ai_format: str = field(default_factory=lambda: os.getenv("AI_RESPONSE_FORMAT", "json_schema"))
+    ai_timeout_seconds: float = field(default_factory=lambda: float(os.getenv("AI_TIMEOUT_SECONDS", "35")))
     allow_real_ai: bool = field(default_factory=lambda: os.getenv("ALLOW_REAL_AI", "false").lower() == "true")
     session_hours: int = 24 * 7
     max_upload_bytes: int = 64 * 1024 * 1024
@@ -32,5 +33,7 @@ class Settings:
             raise ValueError("AI_PROVIDER must be disabled, openai or nvidia")
         if self.ai_format not in ("json_schema", "json_object"):
             raise ValueError("Unsupported AI_RESPONSE_FORMAT")
+        if not 5 <= self.ai_timeout_seconds <= 90:
+            raise ValueError("AI_TIMEOUT_SECONDS must be between 5 and 90")
         if self.ai_provider != "disabled" and not self.ai_base_url.startswith("https://"):
             raise ValueError("AI_BASE_URL must use HTTPS")

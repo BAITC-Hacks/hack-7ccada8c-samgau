@@ -1,6 +1,45 @@
 """Check a configured live provider on synthetic engine data; fallback is a failure."""
 import argparse
+from urllib.parse import quote
 from smoke import Client
+
+
+def check_chat(client, dataset, run):
+    rows = client.call('GET', f'/api/runs/{run["run_id"]}/recommendations?page=1&page_size=100')['items']
+    row = next(r for r in rows if r['sku'] == '00001')
+    product_fields = ('sku', 'supplier_article', 'name', 'unit', 'stock_unit', 'available_stock',
+                      'eligible_incoming', 'forecast_qty', 'safety_stock', 'recommended_qty',
+                      'raw_need', 'stock_units_per_order_unit', 'moq', 'order_step',
+                      'risk_status', 'data_status', 'approval_blockers')
+    product = {key: row[key] for key in product_fields}
+    product.update(supplier_id=row['supplier_id'], run_id=run['run_id'])
+    product['warnings'] = row['warnings'][:6]
+    product['factors'] = [{'label': f['label'][:120], 'value': str(f['value'])[:200]} for f in row['factors'][:6]]
+    context = {
+        'data_mode': 'synthetic', 'run_id': run['run_id'], 'warehouse': dataset['warehouse_id'],
+        'as_of': dataset['as_of'], 'total_products': len(rows),
+        'order_skus': run['summary']['to_order'], 'risk_skus': run['summary']['critical'],
+        'review_skus': run['summary']['needs_review'], 'scenario': 'Исходный расчёт',
+        'selected_sku': row['sku'], 'products': [product],
+    }
+    history = []
+    for question, expected_destination in [
+        ('Сколько рекомендовано заказать выбранного товара? Укажи готовое количество из расчёта и единицу, объясни причину.', None),
+        ('Где проверить этот заказ и скачать CSV?', 'recommendations'),
+        ('Қауіпсіздік қоры деген не? Қысқаша түсіндір.', None),
+    ]:
+        answer = client.call('POST', '/api/assistant/messages', {'message': question, 'history': history, 'context': context})
+        if answer['status'] != 'generated':
+            raise SystemExit('FAIL: live chat returned fallback: ' + str(answer.get('error_code')))
+        if expected_destination:
+            assert expected_destination in answer['destinations'], answer
+        if not history:
+            assert str(int(row['recommended_qty'])) in answer['text'], answer
+            assert row['sku'] in answer['source_skus'], answer
+        history.extend([{'role': 'user', 'content': question}, {'role': 'assistant', 'content': answer['text']}])
+    unchanged = client.call('GET', f'/api/runs/{run["run_id"]}/products/{quote(row["sku"], safe="")}')
+    assert unchanged['recommended_qty'] == row['recommended_qty']
+    print('PASS: live chat answered calculation, navigation and Kazakh follow-up; calculation unchanged')
 
 
 def main():
@@ -29,21 +68,8 @@ def main():
     assert parsed['scenario'] == {'shipment_id': sid, 'delay_days': 7, 'demand_change_pct': 20.0}
     explanation = client.call('POST', f'/api/runs/{rid}/explain', {'sku': '00001', 'language': 'ru'})
     assert explanation['status'] == 'generated'
-    row = client.call('GET', f'/api/runs/{rid}/products/00001')
-    fields = ('sku', 'supplier_article', 'name', 'unit', 'stock_unit', 'stock_units_per_order_unit',
-              'supplier_id', 'available_stock', 'eligible_incoming', 'forecast_qty', 'safety_stock',
-              'recommended_qty', 'risk_status', 'data_status', 'approval_blockers')
-    chat = client.call('POST', '/api/assistant/messages', {
-        'message': 'Почему рекомендован такой заказ для 00001?', 'history': [],
-        'context': {'data_mode': 'synthetic', 'run_ids': [rid], 'warehouse': ds['warehouse_id'],
-                    'as_of': ds['as_of'], 'total_products': run['summary']['products'],
-                    'order_skus': run['summary']['to_order'], 'risk_skus': run['summary']['critical'],
-                    'review_skus': run['summary']['needs_review'], 'scenario': 'Исходный расчёт',
-                    'selected_sku': '00001', 'selected_supplier_id': 'systeme_electric',
-                    'products': [{**{k: row[k] for k in fields}, 'run_id': rid, 'warnings': row['warnings'][:6]}]},
-    })
-    assert chat['status'] == 'generated', chat['notice']
-    print('PASS: live provider parsed scenario, selected verified factors, and answered contextual chat')
+    print('PASS: live provider parsed the scenario and selected verified engine factors')
+    check_chat(client, ds, run)
 
 
 if __name__ == '__main__':

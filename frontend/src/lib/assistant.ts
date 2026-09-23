@@ -1,5 +1,6 @@
 import { ApiError, request } from './api';
 import type { Dataset, Recommendation, Run, Scenario } from '../types';
+import { rowKey } from '../types';
 
 export type ChatDestination = 'overview' | 'recommendations' | 'quality' | 'scenario' | 'exchange';
 export interface ChatAnswer {
@@ -9,6 +10,7 @@ export interface ChatAnswer {
   status: 'generated' | 'fallback';
   provider: string | null;
   notice: string;
+  error_code?: string | null;
 }
 export interface ChatMessage {
   id: string;
@@ -19,6 +21,7 @@ export interface ChatMessage {
 export interface AssistantStatus {
   configured: boolean;
   provider: string | null;
+  model?: string | null;
   allow_real_data: boolean;
 }
 
@@ -47,6 +50,8 @@ export function makeChatContext(
     .slice(0, 40)
     .map((row) => ({
       sku: row.sku,
+      source_key: rowKey(row),
+      sku_1c: row.sku,
       supplier_article: row.supplier_article,
       name: row.name,
       unit: row.unit,
@@ -54,12 +59,23 @@ export function makeChatContext(
       stock_units_per_order_unit: row.stock_units_per_order_unit ?? null,
       supplier_id: row.supplier_id,
       run_id: row.run_id || null,
-      approval_blockers: row.approval_blockers || [],
       available_stock: row.available_stock,
       eligible_incoming: row.eligible_incoming,
       forecast_qty: row.forecast_qty,
       safety_stock: row.safety_stock,
-      recommended_qty: row.data_status === 'missing' ? null : row.recommended_qty,
+      recommended_qty: ['missing', 'blocked'].includes(row.data_status)
+        ? null
+        : row.recommended_qty,
+      raw_need: row.raw_need,
+      moq: row.moq ?? null,
+      order_step: row.order_step ?? null,
+      stockout_date: row.stockout_date,
+      coverage_days: row.coverage_days,
+      factors: row.factors.slice(0, 6).map(({ label, value }) => ({
+        label: label.slice(0, 120),
+        value: value.slice(0, 200),
+      })),
+      approval_blockers: (row.approval_blockers || []).slice(0, 6).map((v) => v.slice(0, 300)),
       risk_status: row.risk_status,
       data_status: row.data_status,
       warnings: row.warnings.slice(0, 6).map((warning) => warning.slice(0, 500)),
@@ -88,16 +104,14 @@ export async function sendChat(
   history: ChatMessage[],
   context: ReturnType<typeof makeChatContext>,
 ): Promise<ChatAnswer> {
-  const send = async () =>
-    request<ChatAnswer>('/assistant/messages', {
-      method: 'POST',
-      body: JSON.stringify({
-        message,
-        context,
-        history: history.slice(-12).map(({ role, content }) => ({ role, content })),
-      }),
-    });
-  const answer = await send();
+  const answer = await request<ChatAnswer>('/assistant/messages', {
+    method: 'POST',
+    body: JSON.stringify({
+      message,
+      context,
+      history: history.slice(-12).map(({ role, content }) => ({ role, content })),
+    }),
+  });
   if (
     !answer ||
     typeof answer.text !== 'string' ||

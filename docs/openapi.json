@@ -3261,6 +3261,17 @@
           "notice": {
             "type": "string",
             "title": "Notice"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
           }
         },
         "additionalProperties": false,
@@ -4737,12 +4748,57 @@
         ],
         "title": "ScreenContext"
       },
+      "ScreenFactor": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Label"
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Value"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "ScreenFactor"
+      },
       "ScreenProduct": {
         "properties": {
           "sku": {
             "type": "string",
             "maxLength": 120,
             "title": "Sku"
+          },
+          "source_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Key"
+          },
+          "sku_1c": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku 1C"
           },
           "supplier_article": {
             "type": "string",
@@ -4869,6 +4925,70 @@
               }
             ],
             "title": "Recommended Qty"
+          },
+          "raw_need": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw Need"
+          },
+          "moq": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moq"
+          },
+          "order_step": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Step"
+          },
+          "stockout_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stockout Date"
+          },
+          "coverage_days": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage Days"
+          },
+          "factors": {
+            "items": {
+              "$ref": "#/components/schemas/ScreenFactor"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "title": "Factors"
           },
           "risk_status": {
             "type": "string",
