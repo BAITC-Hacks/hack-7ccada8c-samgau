@@ -1,7 +1,7 @@
-import { ApiError, request } from './api';
+import { ApiError, request, session } from './api';
 import type { Dataset, Recommendation, Run, Scenario } from '../types';
 
-export type ChatDestination = 'overview' | 'recommendations' | 'quality' | 'scenario';
+export type ChatDestination = 'overview' | 'recommendations' | 'quality' | 'scenario' | 'exchange';
 export interface ChatAnswer {
   text: string;
   destinations: ChatDestination[];
@@ -50,6 +50,7 @@ export function makeChatContext(
       supplier_article: row.supplier_article,
       name: row.name,
       unit: row.unit,
+      stock_unit: row.stock_unit || row.unit,
       available_stock: row.available_stock,
       eligible_incoming: row.eligible_incoming,
       forecast_qty: row.forecast_qty,
@@ -76,21 +77,6 @@ export function makeChatContext(
   };
 }
 
-let sessionPromise: Promise<string> | null = null;
-function session() {
-  if (!sessionPromise)
-    sessionPromise = request<{ token: string }>('/sessions', { method: 'POST' })
-      .then((result) => {
-        if (!result.token) throw new ApiError('Сервер не создал сессию помощника.');
-        return result.token;
-      })
-      .catch((error) => {
-        sessionPromise = null;
-        throw error;
-      });
-  return sessionPromise;
-}
-
 export async function sendChat(
   message: string,
   history: ChatMessage[],
@@ -111,7 +97,6 @@ export async function sendChat(
     answer = await send();
   } catch (error) {
     if (!(error instanceof ApiError) || error.status !== 401) throw error;
-    sessionPromise = null;
     answer = await send();
   }
   if (

@@ -31,6 +31,7 @@ const destinations: Record<ChatDestination, string> = {
   recommendations: 'План закупок',
   quality: 'Проверка данных',
   scenario: 'Что, если…',
+  exchange: 'Обмен с 1С',
 };
 const prompts = [
   { icon: <Database size={19} />, text: 'Что сейчас требует внимания на складе?' },

@@ -123,6 +123,9 @@ def _manifest(path) -> WorkbookManifest:
 
 def import_dataset(request: ImportRequest) -> DatasetPayload:
     request = ImportRequest.model_validate(request)
+    from .partner import PROFILE, import_partner
+    if request.mapping_version == PROFILE:
+        return import_partner(request)
     if request.mapping_version != MAPPING_VERSION:
         raise ValueError(f'unsupported mapping_version; expected {MAPPING_VERSION}')
     if not 1 <= len(request.files) <= 12:

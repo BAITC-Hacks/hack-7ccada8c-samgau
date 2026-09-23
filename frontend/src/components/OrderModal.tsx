@@ -8,12 +8,14 @@ export function OrderModal({
   gateway,
   run,
   mode,
+  synthetic = mode === 'demo',
   onClose,
 }: {
   rows: Recommendation[];
   gateway: Gateway;
   run: string;
   mode: DataMode;
+  synthetic?: boolean;
   onClose: () => void;
 }) {
   const suppliers = [...new Set(rows.map((r) => r.supplier_id))];
@@ -26,15 +28,27 @@ export function OrderModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [downloaded, setDownloaded] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const current = rows.filter((r) => r.supplier_id === supplier);
   const draft = approved[supplier];
+  const needsAcknowledgement = current.some(
+    (r) => r.warnings.length || r.data_status === 'estimated',
+  );
   const invalid = current.some(
     (r) =>
       amounts[r.sku].trim() === '' ||
       !Number.isFinite(Number(amounts[r.sku])) ||
       Number(amounts[r.sku]) < 0 ||
       (r.unit === 'шт' && !Number.isInteger(Number(amounts[r.sku]))) ||
-      (Number(amounts[r.sku]) !== r.recommended_qty && !reasons[r.sku]?.trim()) ||
+      (Number(amounts[r.sku]) !== r.recommended_qty && (reasons[r.sku]?.trim().length || 0) < 3) ||
+      (Number(amounts[r.sku]) > 0 &&
+        (Number(amounts[r.sku]) < (r.moq || 0) ||
+          Math.abs(
+            Number(amounts[r.sku]) / (r.order_step || 1) -
+              Math.round(Number(amounts[r.sku]) / (r.order_step || 1)),
+          ) > 1e-7)) ||
+      !!r.approval_blockers?.length ||
       r.available_stock === null,
   );
   async function approve() {
@@ -42,16 +56,19 @@ export function OrderModal({
     setBusy(true);
     setError('');
     try {
-      const draft = await gateway.createDraft(
-        run,
-        supplier,
-        current.map((r) => ({
-          sku: r.sku,
-          quantity: Number(amounts[r.sku]),
-          reason: reasons[r.sku] || '',
-        })),
-      );
-      const result = await gateway.approve(draft.draft_id, draft.version);
+      const draft =
+        drafts[supplier] ||
+        (await gateway.createDraft(
+          run,
+          supplier,
+          current.map((r) => ({
+            sku: r.sku,
+            quantity: Number(amounts[r.sku]),
+            reason: reasons[r.sku] || '',
+          })),
+        ));
+      setDrafts((previous) => ({ ...previous, [supplier]: draft }));
+      const result = await gateway.approve(draft.draft_id, draft.version, acknowledged);
       if (result.status !== 'approved') throw new Error('Сервер не подтвердил утверждение заказа.');
       setApproved({ ...approved, [supplier]: result });
     } catch (e) {
@@ -68,7 +85,7 @@ export function OrderModal({
       const blob = await gateway.exportDraft(draft.draft_id);
       downloadBlob(
         blob,
-        `QOR-${mode === 'demo' ? 'DEMO-' : ''}${supplier}-${draft.draft_id.slice(0, 8)}.csv`,
+        `QOR-${synthetic ? 'DEMO-' : ''}${supplier}-${draft.draft_id.slice(0, 8)}.csv`,
       );
       setDownloaded(true);
     } catch (e) {
@@ -96,16 +113,17 @@ export function OrderModal({
               setSupplier(s);
               setError('');
               setDownloaded(false);
+              setAcknowledged(false);
             }}
           >
             {supplierName(s)} {approved[s] && <Check size={14} />}
           </button>
         ))}
       </div>
-      {mode === 'demo' && (
+      {synthetic && (
         <div className="notice">
-          <ShieldCheck size={16} /> Демонстрационный заказ. Сохраняется до обновления страницы и не
-          отправляется поставщику.
+          <ShieldCheck size={16} /> Синтетический тестовый заказ. Для реальной закупки загрузите
+          данные компании.
         </div>
       )}
       <div className="order-lines">
@@ -115,6 +133,10 @@ export function OrderModal({
               <strong>{r.name}</strong>
               <span>
                 {r.supplier_article} · рекомендовано {number(r.recommended_qty)} {r.unit}
+                {' · минимум '}
+                {r.moq ?? 0}
+                {' · шаг '}
+                {r.order_step ?? 1}
               </span>
             </div>
             <label className="amount-input">
@@ -122,9 +144,9 @@ export function OrderModal({
                 aria-label={`Количество ${r.supplier_article}`}
                 type="number"
                 min="0"
-                step={r.unit === 'шт' ? '1' : '0.01'}
+                step={r.order_step ?? (r.unit === 'шт' ? 1 : 0.01)}
                 value={amounts[r.sku]}
-                disabled={!!draft || busy}
+                disabled={!!draft || !!drafts[supplier] || busy}
                 onChange={(e) => setAmounts({ ...amounts, [r.sku]: e.target.value })}
               />
               <span>{r.unit}</span>
@@ -136,7 +158,7 @@ export function OrderModal({
                 placeholder="Причина изменения (обязательно)"
                 maxLength={300}
                 value={reasons[r.sku] || ''}
-                disabled={!!draft || busy}
+                disabled={!!draft || !!drafts[supplier] || busy}
                 onChange={(e) => setReasons({ ...reasons, [r.sku]: e.target.value })}
               />
             )}
@@ -146,14 +168,35 @@ export function OrderModal({
       {!current.length && <p>Выберите позиции в таблице рекомендаций.</p>}
       {invalid && (
         <p className="text-error" role="status">
-          Проверьте количества и заполните причины изменений. Для штучных товаров нужны целые
-          значения.
+          Проверьте минимальный заказ, кратность и причины изменений (не менее 3 символов).
         </p>
       )}
       <p className="small muted">
         Файл содержит код 1С, артикул, единицу и утверждённое количество. Импорт в конкретную
         конфигурацию 1С требует согласования формата.
       </p>
+      {needsAcknowledgement && !draft && (
+        <div className="notice">
+          <div>
+            <details>
+              <summary>Предупреждения выбранных товаров</summary>
+              <ul>
+                {[...new Set(current.flatMap((r) => r.warnings))].map((w) => (
+                  <li key={w}>{w}</li>
+                ))}
+              </ul>
+            </details>
+            <label>
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(e) => setAcknowledged(e.target.checked)}
+              />{' '}
+              Я проверил предупреждения и допущения расчёта
+            </label>
+          </div>
+        </div>
+      )}
       {error && (
         <div className="error-box" role="alert">
           {error}
@@ -177,7 +220,7 @@ export function OrderModal({
         ) : (
           <button
             className="primary"
-            disabled={busy || invalid || !current.length}
+            disabled={busy || invalid || !current.length || (needsAcknowledgement && !acknowledged)}
             onClick={approve}
           >
             {busy ? <LoaderCircle className="spin" size={16} /> : <FileCheck2 size={16} />}{' '}

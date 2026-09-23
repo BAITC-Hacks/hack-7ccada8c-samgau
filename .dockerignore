@@ -6,5 +6,8 @@
 data
 upload
 node_modules
-frontend
+frontend/node_modules
+frontend/dist
+frontend/.env*
+!frontend/.env.example
 dist

@@ -1,0 +1,159 @@
+.exchange-view {
+  display: grid;
+  gap: 22px;
+}
+.exchange-path {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26px;
+  gap: 18px;
+}
+.exchange-path > div {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 5px 12px;
+}
+.exchange-path > div > span {
+  grid-row: span 2;
+  background: #eeeaf7;
+  color: #78689e;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+.exchange-path small,
+.exchange-path > svg {
+  color: #85818f;
+}
+.exchange-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 1fr);
+  gap: 22px;
+}
+.exchange-upload,
+.exchange-aside > .panel,
+.exchange-datasets {
+  padding: 26px;
+}
+.exchange-upload h2 {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+.exchange-view p {
+  color: #716e7a;
+  line-height: 1.65;
+}
+.exchange-upload > input,
+.exchange-upload > select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #dedde5;
+  border-radius: 10px;
+  background: white;
+}
+.exchange-checklist {
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  list-style: none;
+  font-size: 13px;
+  margin: 22px 0;
+}
+.exchange-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.exchange-drop {
+  border: 1.5px dashed #bcb0d5;
+  border-radius: 15px;
+  background: #faf8ff;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+}
+.exchange-drop > span {
+  font-size: 12px;
+  color: #716e7a;
+}
+.exchange-drop input {
+  max-width: 100%;
+  font-size: 12px;
+}
+.exchange-files {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.exchange-files li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.exchange-files li span {
+  overflow-wrap: anywhere;
+  flex: 1;
+}
+.exchange-files small {
+  white-space: nowrap;
+  color: #85818f;
+}
+.exchange-aside {
+  display: grid;
+  gap: 22px;
+  align-content: start;
+}
+.exchange-datasets article {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 0;
+  border-top: 1px solid #eee;
+}
+.exchange-datasets article > div {
+  flex: 1;
+  min-width: 0;
+}
+.exchange-datasets article span {
+  display: block;
+  color: #85818f;
+  font-size: 12px;
+  margin-top: 7px;
+}
+.exchange-upload > .primary {
+  margin-top: 16px;
+}
+.exchange-upload .notice,
+.exchange-upload .success-box {
+  margin-top: 16px;
+}
+@media (max-width: 900px) {
+  .exchange-grid {
+    grid-template-columns: 1fr;
+  }
+  .exchange-path {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .exchange-path > svg {
+    transform: rotate(90deg);
+    align-self: center;
+  }
+  .exchange-datasets article {
+    flex-wrap: wrap;
+  }
+  .exchange-datasets article button {
+    width: 100%;
+    justify-content: center;
+  }
+}

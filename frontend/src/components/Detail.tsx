@@ -74,7 +74,7 @@ export function Detail({
         <div>
           <h3>{row.name}</h3>
           <span className="muted">
-            Код 1С {row.sku} · {row.category}
+            Код 1С {row.sku_1c || row.sku} · {row.category}
           </span>
         </div>
         <span className={`badge ${row.risk_status}`}>{riskLabel[row.risk_status]}</span>
@@ -107,13 +107,19 @@ export function Detail({
         </div>
         <b>=</b>
         <div className="formula-result">
-          <span>С округлением</span>
+          <span>К заказу</span>
           <strong>
             {row.available_stock === null ? '—' : number(row.recommended_qty)}{' '}
             <small>{row.unit}</small>
           </strong>
         </div>
       </div>
+      <p className="small muted">
+        Прогноз, запас и поступления — в {row.stock_unit || row.unit}. Потребность{' '}
+        {number(row.raw_need)} делится на{' '}
+        {number(row.stock_units_per_order_unit ?? (mode === 'demo' ? 1 : null))} и округляется по
+        минимуму {row.moq ?? 0} и шагу {row.order_step ?? 1} в {row.unit}.
+      </p>
       <div className="factor-grid">
         {row.factors.map((f) => (
           <div key={f.label}>
