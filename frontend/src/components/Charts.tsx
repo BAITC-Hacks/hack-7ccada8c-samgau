@@ -12,7 +12,7 @@ import {
   YAxis,
 } from 'recharts';
 import type { HistoryPoint, StockPoint } from '../types';
-const axis = { fontSize: 11, fill: '#8b9790' };
+const axis = { fontSize: 11, fill: '#85818f' };
 export function StockChart({ data, scenario = false }: { data: StockPoint[]; scenario?: boolean }) {
   const fillId = useId().replaceAll(':', '');
   return (
@@ -25,8 +25,8 @@ export function StockChart({ data, scenario = false }: { data: StockPoint[]; sce
         <ComposedChart data={data} margin={{ top: 14, right: 6, left: -23, bottom: 0 }}>
           <defs>
             <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#238777" stopOpacity={0.15} />
-              <stop offset="100%" stopColor="#238777" stopOpacity={0} />
+              <stop offset="0%" stopColor="#7da598" stopOpacity={0.5} />
+              <stop offset="100%" stopColor="#7da598" stopOpacity={0.06} />
             </linearGradient>
           </defs>
           <CartesianGrid stroke="#edf0eb" vertical={false} />
@@ -49,7 +49,7 @@ export function StockChart({ data, scenario = false }: { data: StockPoint[]; sce
             type="linear"
             dataKey="with_order"
             fill={`url(#${fillId})`}
-            stroke="#208171"
+            stroke="#7da598"
             strokeWidth={2.5}
             isAnimationActive={false}
           />
@@ -57,7 +57,7 @@ export function StockChart({ data, scenario = false }: { data: StockPoint[]; sce
             name="Без заказа"
             type="monotone"
             dataKey="baseline"
-            stroke="#98aaa3"
+            stroke="#aaa0d0"
             strokeWidth={2}
             strokeDasharray="5 5"
             dot={false}
@@ -91,7 +91,7 @@ export function HistoryChart({ data }: { data: HistoryPoint[] }) {
           <Bar
             dataKey="actual"
             name="Фактические продажи"
-            fill="#d9e5de"
+            fill="#e0daed"
             radius={[4, 4, 0, 0]}
             maxBarSize={28}
             isAnimationActive={false}
@@ -100,7 +100,7 @@ export function HistoryChart({ data }: { data: HistoryPoint[] }) {
             type="monotone"
             dataKey="regular"
             name="Регулярный спрос"
-            stroke="#237a67"
+            stroke="#8b7cac"
             strokeWidth={2.5}
             dot={{ r: 3 }}
             isAnimationActive={false}
