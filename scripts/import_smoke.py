@@ -48,6 +48,9 @@ def main():
             run = client.call("GET", f'/api/runs/{item["run_id"]}')
             assert run["dataset_id"] == item["dataset_id"]
             assert run["algorithm_version"] == "qor-mvp-1.0"
+        draft = client.call('GET', f'/api/orders/{state["draft_id"]}')
+        assert draft['status'] == 'draft' and draft['version'] == state['draft_version']
+        assert draft['lines'][0]['approved_qty'] == 180
         assert b";168.0;" in client.call("GET", f'/api/orders/{state["order_id"]}/export.csv')
         print("PASS: imported datasets, session, runs and approved CSV survived restart")
         return
@@ -76,6 +79,9 @@ def main():
             if supplier == "systeme_electric":
                 rid, oid = verify_order(client, did, supplier, AS_OF.isoformat(), "00001")
                 state["order_id"] = oid
+                draft = client.call('POST', '/api/orders', {'run_id': rid, 'supplier_id': supplier, 'skus': ['00001']})
+                draft = client.call('PATCH', f'/api/orders/{draft["draft_id"]}', {'version': draft['version'], 'changes': [{'sku': '00001', 'approved_qty': 180, 'reason': 'Persistence smoke'}]})
+                state.update(draft_id=draft['draft_id'], draft_version=draft['version'])
             else:
                 run = client.call("POST", "/api/runs", {"dataset_id": did, "supplier_id": supplier, "as_of": AS_OF.isoformat()})
                 rid = run["run_id"]
@@ -85,6 +91,8 @@ def main():
             other = Client(args.url)
             other.session()
             other.expect_error(404, "GET", f"/api/datasets/{did}/quality")
+            other.expect_error(404, "GET", f"/api/imports/{job["import_id"]}")
+            other.expect_error(404, "GET", f"/api/runs/{rid}")
             state["imports"].append({"dataset_id": did, "run_id": rid})
             print(f"PASS: {supplier}: 6 synthetic XLSX -> import -> dedup -> engine -> isolation")
     if args.state_file:

@@ -6,5 +6,8 @@
 data
 upload
 node_modules
-frontend
+frontend/node_modules
+frontend/dist
 dist
+frontend/test-results
+frontend/playwright-report

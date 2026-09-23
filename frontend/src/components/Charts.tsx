@@ -13,7 +13,15 @@ import {
 } from 'recharts';
 import type { HistoryPoint, StockPoint } from '../types';
 const axis = { fontSize: 11, fill: '#85818f' };
-export function StockChart({ data, scenario = false }: { data: StockPoint[]; scenario?: boolean }) {
+export function StockChart({
+  data,
+  scenario = false,
+  unit = '',
+}: {
+  data: StockPoint[];
+  scenario?: boolean;
+  unit?: string;
+}) {
   const fillId = useId().replaceAll(':', '');
   return (
     <div
@@ -41,7 +49,7 @@ export function StockChart({ data, scenario = false }: { data: StockPoint[]; sce
           <YAxis tick={axis} tickLine={false} axisLine={false} />
           <Tooltip
             contentStyle={{ borderRadius: 12, border: '1px solid #e3e9e2', fontSize: 12 }}
-            formatter={(value) => (typeof value === 'number' ? Math.round(value) : value)}
+            formatter={(value) => `${value ?? 'Нет данных'} ${unit}`}
           />
           <ReferenceLine y={0} stroke="#c88776" strokeDasharray="4 4" />
           <Area
@@ -79,15 +87,26 @@ export function StockChart({ data, scenario = false }: { data: StockPoint[]; sce
     </div>
   );
 }
-export function HistoryChart({ data }: { data: HistoryPoint[] }) {
+export function HistoryChart({ data, unit = '' }: { data: HistoryPoint[]; unit?: string }) {
   return (
     <div className="history-chart" role="img" aria-label="История фактических и регулярных продаж">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
           <CartesianGrid vertical={false} stroke="#edf0eb" />
-          <XAxis dataKey="month" tick={axis} axisLine={false} tickLine={false} />
+          <XAxis
+            dataKey="month"
+            tickFormatter={(month, index) =>
+              `${month}${data[index]?.complete === false ? '*' : ''}`
+            }
+            tick={axis}
+            axisLine={false}
+            tickLine={false}
+          />
           <YAxis tick={axis} axisLine={false} tickLine={false} />
-          <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12, border: '1px solid #e3e9e2' }} />
+          <Tooltip
+            formatter={(value) => `${value ?? 'Нет данных'} ${unit}`}
+            contentStyle={{ borderRadius: 12, fontSize: 12, border: '1px solid #e3e9e2' }}
+          />
           <Bar
             dataKey="actual"
             name="Фактические продажи"

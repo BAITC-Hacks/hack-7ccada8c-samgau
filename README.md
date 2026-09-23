@@ -1,6 +1,8 @@
 # hack-7ccada8c-samgau
 Hackathon team repository for Samgau.
 
+**Текущая интеграция и команды проверки: [UI_BACKEND_VERIFICATION.md](docs/UI_BACKEND_VERIFICATION.md).**
+
 **Капитану: [инструкция подключения готового UI, backend, ИИ и Docker](docs/CAPTAIN_UI_INTEGRATION.md).** В ней перечислены актуальные несовпадения контрактов и критерии сквозной приёмки.
 
 # 📦 HACKALEM AI: Автоматический расчёт заказов поставщикам для ТОО «Электрокомплект»

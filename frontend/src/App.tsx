@@ -43,6 +43,10 @@ import type {
   Supplier,
 } from './types';
 import { api } from './lib/api';
+import { resetSession } from './lib/session';
+import { rowKey, validForOrder } from './types';
+import { ImportModal } from './components/ImportModal';
+import { SavedOrders } from './components/SavedOrders';
 import { demo } from './lib/demo';
 import { date, number, riskLabel, supplierName } from './lib/format';
 import { StockChart } from './components/Charts';
@@ -54,7 +58,7 @@ import { InventorySummary } from './components/InventorySummary';
 import { Assistant } from './components/Assistant';
 
 type View = 'overview' | 'recommendations' | 'quality' | 'assistant';
-const initialMode: DataMode = import.meta.env.VITE_DATA_MODE === 'api' ? 'api' : 'demo';
+const initialMode: DataMode = import.meta.env.VITE_DATA_MODE === 'demo' ? 'demo' : 'api';
 const PAGE_SIZE = 6;
 export default function App() {
   const [mode, setMode] = useState<DataMode>(initialMode);
@@ -82,6 +86,8 @@ export default function App() {
   const [scenarioOpen, setScenarioOpen] = useState(false);
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [orderOpen, setOrderOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [savedOpen, setSavedOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [chartSku, setChartSku] = useState('');
@@ -90,8 +96,6 @@ export default function App() {
   const [chartRetry, setChartRetry] = useState(0);
   const epoch = useRef(0);
   const tableRef = useRef<HTMLElement>(null);
-  const validForOrder = (r: Recommendation) =>
-    r.available_stock !== null && r.data_status !== 'missing' && r.recommended_qty > 0;
 
   const load = useCallback(
     async (chosen?: Dataset) => {
@@ -128,8 +132,10 @@ export default function App() {
         setBaseRun(result);
         setRows(resultRows.items);
         setBaseRows(resultRows.items);
-        setChartSku(resultRows.items.find((r) => r.available_stock !== null)?.sku || '');
-        setSelected(new Set(resultRows.items.filter(validForOrder).map((r) => r.sku)));
+        setChartSku(
+          rowKey(resultRows.items.find((r) => r.available_stock !== null) || resultRows.items[0]),
+        );
+        setSelected(new Set(resultRows.items.filter(validForOrder).map(rowKey)));
         setPage(1);
         gateway
           .quality(active.id)
@@ -184,16 +190,16 @@ export default function App() {
               .includes(query.toLowerCase().trim()) &&
             (filter === 'all' ||
               (filter === 'critical' && r.risk_status === 'critical') ||
-              (filter === 'review' && r.data_status === 'missing') ||
-              (filter === 'order' && r.recommended_qty > 0)),
+              (filter === 'review' && ['missing', 'blocked', 'review'].includes(r.data_status)) ||
+              (filter === 'order' && (r.recommended_qty ?? 0) > 0)),
         )
         .sort((a, b) =>
           sort === 'name'
             ? a.name.localeCompare(b.name, 'ru')
             : sort === 'qty'
-              ? b.recommended_qty - a.recommended_qty
-              : { critical: 0, warning: 1, healthy: 2 }[a.risk_status] -
-                { critical: 0, warning: 1, healthy: 2 }[b.risk_status],
+              ? (b.recommended_qty ?? -1) - (a.recommended_qty ?? -1)
+              : { critical: 0, unknown: 1, warning: 2, healthy: 3 }[a.risk_status] -
+                { critical: 0, unknown: 1, warning: 2, healthy: 3 }[b.risk_status],
         ),
     [rows, supplier, query, filter, sort],
   );
@@ -202,13 +208,13 @@ export default function App() {
     (Math.min(page, maxPage) - 1) * PAGE_SIZE,
     Math.min(page, maxPage) * PAGE_SIZE,
   );
-  const chosenRows = rows.filter((r) => selected.has(r.sku) && validForOrder(r));
-  const chartRow = rows.find((r) => r.sku === chartSku);
+  const chosenRows = rows.filter((r) => selected.has(rowKey(r)) && validForOrder(r));
+  const chartRow = rows.find((r) => rowKey(r) === chartSku);
   const activeScenario =
     !!scenario && (scenario.delay_days !== 0 || scenario.demand_change_pct !== 0);
   const selectAll =
     visible.filter(validForOrder).length > 0 &&
-    visible.filter(validForOrder).every((r) => selected.has(r.sku));
+    visible.filter(validForOrder).every((r) => selected.has(rowKey(r)));
   function toggle(sku: string) {
     setSelected((previous) => {
       const next = new Set(previous);
@@ -221,8 +227,8 @@ export default function App() {
     setSelected((previous) => {
       const next = new Set(previous);
       visible.filter(validForOrder).forEach((r) => {
-        if (selectAll) next.delete(r.sku);
-        else next.add(r.sku);
+        if (selectAll) next.delete(rowKey(r));
+        else next.add(rowKey(r));
       });
       return next;
     });
@@ -241,7 +247,7 @@ export default function App() {
       setRun(result);
       setRows(response.items);
       setScenario(values);
-      setSelected(new Set(response.items.filter(validForOrder).map((r) => r.sku)));
+      setSelected(new Set(response.items.filter(validForOrder).map(rowKey)));
       setPage(1);
     } finally {
       setBusy(false);
@@ -251,7 +257,7 @@ export default function App() {
     setRun(baseRun);
     setRows(baseRows);
     setScenario(null);
-    setSelected(new Set(baseRows.filter(validForOrder).map((r) => r.sku)));
+    setSelected(new Set(baseRows.filter(validForOrder).map(rowKey)));
   }
   async function calculate() {
     if (!dataset) return;
@@ -464,6 +470,31 @@ export default function App() {
                   <option value="api">Данные API</option>
                 </select>
               </label>
+              {mode === 'api' && (
+                <>
+                  <button className="text-button" onClick={() => setImportOpen(true)}>
+                    Импорт XLSX
+                  </button>
+                  <button className="text-button" onClick={() => setSavedOpen(true)}>
+                    Сохранённые заказы
+                  </button>
+                  <button
+                    className="text-button"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          'Начать новую сессию? Доступ к прежним приватным данным и черновикам будет потерян.',
+                        )
+                      ) {
+                        resetSession();
+                        void load();
+                      }
+                    }}
+                  >
+                    Начать новую сессию
+                  </button>
+                </>
+              )}
               {datasets.length > 1 && (
                 <label>
                   <select
@@ -591,11 +622,11 @@ export default function App() {
                       <>
                         <div className="quality-metrics">
                           <div>
-                            <strong>{quality.source_count}</strong>
+                            <strong>{number(quality.source_count)}</strong>
                             <span>типов источников</span>
                           </div>
                           <div>
-                            <strong>{quality.mapped_skus}</strong>
+                            <strong>{number(quality.mapped_skus)}</strong>
                             <span>сопоставленных SKU</span>
                           </div>
                           <div>
@@ -652,10 +683,14 @@ export default function App() {
                           <Stat
                             icon={<Activity size={18} />}
                             label="Разовые покупки"
-                            value={summary?.anomaly_count || 0}
+                            value={summary?.anomaly_count ?? null}
                             unit="заказ."
                             note="Выделены из регулярного спроса"
-                            trend="Прогноз без искажений"
+                            trend={
+                              summary?.anomaly_count == null
+                                ? 'Показатель не передан сервером'
+                                : 'Прогноз без искажений'
+                            }
                             tone="blue"
                           />
                           <Stat
@@ -663,7 +698,7 @@ export default function App() {
                             label="Проверить данные"
                             value={summary?.review_skus || 0}
                             unit="поз."
-                            note="Недостаточно данных для заказа"
+                            note="Предупреждения и ограничения"
                             trend="Нужна проверка"
                             tone="neutral"
                           />
@@ -678,7 +713,10 @@ export default function App() {
                             <div className="section-title">
                               <div>
                                 <h2>Запас под контролем</h2>
-                                <p>Как изменится наличие в ближайшие 28 дней</p>
+                                <p>
+                                  Горизонт: {chart?.projection.length ?? '—'} дней ·{' '}
+                                  {chartRow?.stock_unit || chartRow?.unit}
+                                </p>
                               </div>
                               <span className="pill">
                                 <span className="small-dot" /> ПРОГНОЗ
@@ -694,12 +732,12 @@ export default function App() {
                                 {rows
                                   .filter((r) => r.available_stock !== null)
                                   .map((r) => (
-                                    <option value={r.sku} key={r.sku}>
+                                    <option value={rowKey(r)} key={rowKey(r)}>
                                       {r.name}
                                     </option>
                                   ))}
                               </select>
-                              <span>{chartRow?.unit || 'шт'}</span>
+                              <span>{chartRow?.stock_unit || chartRow?.unit || '—'}</span>
                             </div>
                             {!chartRow ? (
                               <div className="chart-skeleton">
@@ -717,7 +755,11 @@ export default function App() {
                                 </button>
                               </div>
                             ) : chart ? (
-                              <StockChart data={chart.projection} scenario={activeScenario} />
+                              <StockChart
+                                unit={chartRow.stock_unit || chartRow.unit}
+                                data={chart.projection}
+                                scenario={activeScenario}
+                              />
                             ) : (
                               <div className="chart-skeleton">
                                 <LoaderCircle className="spin" size={20} /> Загружаем прогноз…
@@ -798,6 +840,9 @@ export default function App() {
                         </button>
                       </div>
                       <div className="table-controls">
+                        <button className="text-button" onClick={() => setSelected(new Set())}>
+                          Снять выбор
+                        </button>
                         <div className="search-box">
                           <Search size={17} />
                           <input
@@ -820,8 +865,11 @@ export default function App() {
                             onChange={(e) => setSupplier(e.target.value as Supplier)}
                           >
                             <option value="all">Все поставщики</option>
-                            <option value="iek">IEK</option>
-                            <option value="systeme">Systeme Electric</option>
+                            {[...new Set(rows.map((r) => r.supplier_id))].map((id) => (
+                              <option key={id} value={id}>
+                                {supplierName(id)}
+                              </option>
+                            ))}
                           </select>
                         </label>
                         <label className="filter-select">
@@ -855,7 +903,9 @@ export default function App() {
                             {f.label}
                           </button>
                         ))}
-                        <span className="table-unit-note">Количества в единицах товара</span>
+                        <span className="table-unit-note">
+                          Остатки — складские единицы; заказ — единицы заказа
+                        </span>
                       </div>
                       <div className="table-scroll">
                         <table>
@@ -884,16 +934,16 @@ export default function App() {
                           <tbody>
                             {visible.map((row) => (
                               <tr
-                                key={row.sku}
-                                className={selected.has(row.sku) ? 'selected-row' : ''}
+                                key={rowKey(row)}
+                                className={selected.has(rowKey(row)) ? 'selected-row' : ''}
                               >
                                 <td>
                                   <input
                                     type="checkbox"
                                     aria-label={`Выбрать ${row.supplier_article}`}
-                                    checked={selected.has(row.sku)}
+                                    checked={selected.has(rowKey(row))}
                                     disabled={!validForOrder(row)}
-                                    onChange={() => toggle(row.sku)}
+                                    onChange={() => toggle(rowKey(row))}
                                   />
                                 </td>
                                 <td>
@@ -905,8 +955,10 @@ export default function App() {
                                   </span>
                                 </td>
                                 <td>
-                                  <span className={`supplier-badge ${row.supplier_id}`}>
-                                    {row.supplier_id === 'iek' ? 'IEK' : 'Systeme'}
+                                  <span
+                                    className={`supplier-badge ${row.supplier_id === 'systeme_electric' ? 'systeme' : row.supplier_id}`}
+                                  >
+                                    {supplierName(row.supplier_id)}
                                   </span>
                                 </td>
                                 <td className="numeric">
@@ -917,17 +969,19 @@ export default function App() {
                                   ) : (
                                     number(row.available_stock)
                                   )}
-                                  <small>{row.available_stock !== null && row.unit}</small>
+                                  <small>
+                                    {row.available_stock !== null && (row.stock_unit || row.unit)}
+                                  </small>
                                 </td>
                                 <td className="numeric muted">
                                   {number(row.eligible_incoming)}
-                                  <small>{row.unit}</small>
+                                  <small>{row.stock_unit || row.unit}</small>
                                 </td>
                                 <td className="numeric">
                                   <span
-                                    className={`order-qty ${row.recommended_qty > 0 ? 'positive' : ''}`}
+                                    className={`order-qty ${(row.recommended_qty ?? 0) > 0 ? 'positive' : ''}`}
                                   >
-                                    {row.data_status === 'missing'
+                                    {['missing', 'blocked'].includes(row.data_status)
                                       ? '—'
                                       : number(row.recommended_qty)}
                                   </span>
@@ -935,11 +989,11 @@ export default function App() {
                                 </td>
                                 <td>
                                   <span
-                                    className={`badge ${row.data_status === 'missing' ? 'warning' : row.risk_status}`}
+                                    className={`badge ${['missing', 'blocked'].includes(row.data_status) ? 'warning' : row.risk_status}`}
                                   >
                                     <span />
-                                    {row.data_status === 'missing'
-                                      ? 'Проверить'
+                                    {['missing', 'blocked'].includes(row.data_status)
+                                      ? 'Заказ заблокирован'
                                       : riskLabel[row.risk_status]}
                                   </span>
                                 </td>
@@ -1042,6 +1096,8 @@ export default function App() {
           gateway={gateway}
           mode={mode}
           supplier={supplier}
+          run={baseRun?.run_id || ''}
+          suppliers={[...new Set(rows.map((r) => r.supplier_id))]}
           onApply={applyScenario}
           onClose={() => setScenarioOpen(false)}
         />
@@ -1055,6 +1111,19 @@ export default function App() {
           onClose={() => setOrderOpen(false)}
         />
       )}
+      {importOpen && (
+        <ImportModal
+          onClose={() => setImportOpen(false)}
+          onComplete={async (id) => {
+            const available = await api.datasets();
+            setDatasets(available);
+            const next = available.find((d) => d.id === id);
+            if (next) await load(next);
+            setImportOpen(false);
+          }}
+        />
+      )}
+      {savedOpen && <SavedOrders gateway={gateway} onClose={() => setSavedOpen(false)} />}
       {helpOpen && (
         <Modal
           title="Покажите результат за 90 секунд"
@@ -1128,7 +1197,7 @@ function Stat({
 }: {
   icon: React.ReactNode;
   label: string;
-  value: number;
+  value: number | null;
   unit: string;
   note: string;
   trend: string;
@@ -1141,7 +1210,7 @@ function Stat({
         <span className="stat-icon">{icon}</span>
       </div>
       <div className="stat-value">
-        {number(value)} <span>{unit}</span>
+        {number(value)} <span>{value === null ? '' : unit}</span>
       </div>
       <p>{note}</p>
       <div className="stat-footer">

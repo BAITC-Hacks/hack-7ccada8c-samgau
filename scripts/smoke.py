@@ -91,13 +91,19 @@ def main():
     if not args.fixture:
         assert health['engine_configured'] and health['importer_configured']
         assert ds['engine_backend'] == 'plugin'
-    verify_order(client, did, 'IEK' if args.fixture else 'systeme_electric', ds['as_of'],
+    base_rid, _ = verify_order(client, did, 'IEK' if args.fixture else 'systeme_electric', ds['as_of'],
                  '0001_' if args.fixture else '00001', fixture=args.fixture)
     if not args.fixture:
         run = client.call('POST', '/api/runs', {'dataset_id': did, 'supplier_id': 'iek', 'as_of': ds['as_of']})
         cable = client.call('GET', f'/api/runs/{run["run_id"]}/products/00007')
         assert cable['recommended_qty'] == 2 and cable['stock_units_per_order_unit'] == 305
         assert cable['unit'] == 'бухта' and cable['stock_unit'] == 'м'
+        blocked = client.call('GET', f'/api/runs/{base_rid}/products/00008')
+        assert blocked['data_status'] == 'blocked' and blocked['recommended_qty'] is None
+        draft = client.call('POST', '/api/orders', {'run_id': base_rid, 'supplier_id': 'systeme_electric', 'skus': ['00008']})
+        path = f'/api/orders/{draft["draft_id"]}'
+        client.expect_error(422, 'PATCH', path, {'version': draft['version'], 'changes': [{'sku': '00008', 'approved_qty': 10, 'reason': 'Cannot override unknown data'}]})
+        client.expect_error(422, 'POST', path + '/approve', {'version': draft['version'], 'acknowledge_warnings': True})
     print(f'PASS ({did}): session -> engine 156 -> scenario 204 -> edit 168 -> approve -> CSV; isolation OK')
 
 

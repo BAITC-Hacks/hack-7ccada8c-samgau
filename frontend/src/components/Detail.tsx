@@ -8,6 +8,7 @@ import {
   Sparkles,
   TriangleAlert,
 } from 'lucide-react';
+import { rowKey } from '../types';
 import type { DataMode, Explanation, Gateway, ProductDetail, Recommendation } from '../types';
 import { number, riskLabel, supplierName } from '../lib/format';
 import { Modal } from './Modal';
@@ -38,7 +39,7 @@ export function Detail({
     setData(null);
     setError('');
     gateway
-      .detail(run, row.sku)
+      .detail(run, rowKey(row))
       .then((value) => {
         if (active) setData(value);
       })
@@ -53,7 +54,7 @@ export function Detail({
     setExplaining(true);
     setAiError('');
     try {
-      setExplanation(await gateway.explain(run, row.sku));
+      setExplanation(await gateway.explain(run, rowKey(row)));
     } catch (e) {
       setAiError((e as Error).message);
     } finally {
@@ -79,7 +80,7 @@ export function Detail({
         </div>
         <span className={`badge ${row.risk_status}`}>{riskLabel[row.risk_status]}</span>
       </div>
-      {row.warnings.map((w) => (
+      {[...(row.approval_blockers || []), ...row.warnings].map((w) => (
         <div className="notice" key={w}>
           <TriangleAlert size={16} />
           <span>{w}</span>
@@ -88,22 +89,30 @@ export function Detail({
       <div className="formula">
         <div>
           <span>Прогноз</span>
-          <strong>{number(row.forecast_qty)}</strong>
+          <strong>
+            {number(row.forecast_qty)} <small>{row.stock_unit || row.unit}</small>
+          </strong>
         </div>
         <b>+</b>
         <div>
           <span>Страховой</span>
-          <strong>{number(row.safety_stock)}</strong>
+          <strong>
+            {number(row.safety_stock)} <small>{row.stock_unit || row.unit}</small>
+          </strong>
         </div>
         <b>−</b>
         <div>
           <span>Свободно</span>
-          <strong>{number(row.available_stock)}</strong>
+          <strong>
+            {number(row.available_stock)} <small>{row.stock_unit || row.unit}</small>
+          </strong>
         </div>
         <b>−</b>
         <div>
           <span>В пути</span>
-          <strong>{number(row.eligible_incoming)}</strong>
+          <strong>
+            {number(row.eligible_incoming)} <small>{row.stock_unit || row.unit}</small>
+          </strong>
         </div>
         <b>=</b>
         <div className="formula-result">
@@ -114,11 +123,20 @@ export function Detail({
           </strong>
         </div>
       </div>
+      <p className="small">
+        Потребность: {number(row.raw_need)} {row.stock_unit || row.unit}. В единице заказа:{' '}
+        {number(row.stock_units_per_order_unit ?? null)} {row.stock_unit || row.unit}/{row.unit}.
+        Готовность: {row.data_status}.
+      </p>
       <div className="factor-grid">
         {row.factors.map((f) => (
           <div key={f.label}>
             <span>{f.label}</span>
             <strong>{f.value}</strong>
+            <small>
+              {f.status}
+              {f.source && ` · ${f.source.file} / ${f.source.sheet || ''} / ${f.source.row || ''}`}
+            </small>
           </div>
         ))}
       </div>
@@ -137,7 +155,7 @@ export function Detail({
             <h4>
               Что происходило со спросом <ArrowUpRight size={16} />
             </h4>
-            <HistoryChart data={data.history} />
+            <HistoryChart unit={row.stock_unit || row.unit} data={data.history} />
             <p className="chart-note">
               Столбцы — продажи · линия — регулярный спрос. * Неполный месяц.
             </p>
@@ -150,7 +168,11 @@ export function Detail({
               {row.available_stock === null ? (
                 <div className="chart-skeleton">Нужен актуальный остаток для прогноза запаса.</div>
               ) : (
-                <StockChart data={data.projection} scenario={scenario} />
+                <StockChart
+                  unit={row.stock_unit || row.unit}
+                  data={data.projection}
+                  scenario={scenario}
+                />
               )}
             </>
             <p className="chart-note">{data.method}</p>

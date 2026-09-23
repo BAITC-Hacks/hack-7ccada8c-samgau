@@ -403,7 +403,7 @@ def create_app(settings=None, ai=None):
             fail(422, "duplicate_change", "Товар указан дважды")
         for change in body.changes:
             line = next((x for x in p["lines"] if x["recommendation"]["sku"] == change.sku), None)
-            if line is None or not change.reason.strip():
+            if line is None or len(change.reason.strip()) < 3:
                 fail(422, "invalid_change", "Неизвестный товар или пустая причина")
             old = line["approved_qty"]
             line.update(approved_qty=change.approved_qty, reason=change.reason.strip(), edited_by=owner)
@@ -441,7 +441,7 @@ def create_app(settings=None, ai=None):
             fail(409, "approval_required", "Сначала утвердите заказ")
         return Response(export_csv(obj["payload"], obj["version"]), media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="qor-order-{draft_id}-v{obj["version"]}.csv"'})
 
-    register_assistant(app, session, limited, ai, settings)
+    register_assistant(app, session, limited, ai, settings, lambda rid, owner: get("run", rid, owner)["payload"])
     return app
 
 

@@ -511,6 +511,8 @@ input[type='range'] {
 }
 .context-fields {
   display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
   align-items: center;
   gap: 14px;
 }

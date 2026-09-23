@@ -1,3 +1,5 @@
+> Интеграция 23.09.2026: [реализованные контракты, проверки и точный остаток](UI_BACKEND_VERIFICATION.md). Ниже сохранён исходный handoff.
+
 # Капитану / участнику 1: довести интерфейс QOR до работающего сайта
 
 Передача от участника 3, 23.09.2026. Репозиторий: [BAITC-Hacks/hack-7ccada8c-samgau](https://github.com/BAITC-Hacks/hack-7ccada8c-samgau). Интерфейс, новый дизайн и ИИ-помощник находятся в ветке `codex/dashboard-redesign`, [PR #3](https://github.com/BAITC-Hacks/hack-7ccada8c-samgau/pull/3). В неё уже объединён `main` с обновлением backend из PR #4, commit `76bc20f`; merge-коммит — `25dcce7`. Коммиты интерфейса: `68b074e`, чата: `9a1b617`.
