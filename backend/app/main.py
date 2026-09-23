@@ -21,6 +21,7 @@ from starlette.concurrency import run_in_threadpool
 
 from . import demo, integration
 from .ai.adapter import AIAdapter, AIUnavailable
+from .ai.assistant import register_assistant
 from .api.models import ApproveOrder, CreateOrder, ExplainRequest, ParseRequest, PatchOrder, RunRequest
 from .api.models import DatasetList, ExplainResponse, HealthResponse, OrderList, OrderResponse, ParseResponse, RecommendationPage, RunResponse, ScenarioResponse, SessionResponse
 from .config import Settings
@@ -431,6 +432,7 @@ def create_app(settings=None, ai=None):
             fail(409, "approval_required", "Сначала утвердите заказ")
         return Response(export_csv(obj["payload"], obj["version"]), media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="qor-order-{draft_id}-v{obj["version"]}.csv"'})
 
+    register_assistant(app, session, limited, ai, settings)
     return app
 
 

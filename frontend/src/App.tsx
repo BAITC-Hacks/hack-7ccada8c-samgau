@@ -18,6 +18,7 @@ import {
   ListFilter,
   LoaderCircle,
   MapPin,
+  MessageCircle,
   Package,
   PanelLeftClose,
   Play,
@@ -50,8 +51,9 @@ import { Modal } from './components/Modal';
 import { ScenarioModal } from './components/ScenarioModal';
 import { OrderModal } from './components/OrderModal';
 import { InventorySummary } from './components/InventorySummary';
+import { Assistant } from './components/Assistant';
 
-type View = 'overview' | 'recommendations' | 'quality';
+type View = 'overview' | 'recommendations' | 'quality' | 'assistant';
 const initialMode: DataMode = import.meta.env.VITE_DATA_MODE === 'api' ? 'api' : 'demo';
 const PAGE_SIZE = 6;
 export default function App() {
@@ -328,6 +330,13 @@ export default function App() {
             <Database size={20} /> Проверка данных{' '}
             {summary && summary.review_skus > 0 && <span className="nav-warning" />}
           </button>
+          <button
+            className={view === 'assistant' ? 'active' : ''}
+            aria-current={view === 'assistant' ? 'page' : undefined}
+            onClick={() => navigate('assistant')}
+          >
+            <MessageCircle size={20} /> ИИ-помощник
+          </button>
         </nav>
         <div className="sidebar-bottom">
           <div className="assistant-note">
@@ -341,8 +350,8 @@ export default function App() {
               У каждого числа есть причина.
               <br />У каждого заказа — ваш контроль.
             </p>
-            <button onClick={() => setHelpOpen(true)}>
-              Как работает QOR <ArrowUpRight size={14} />
+            <button onClick={() => navigate('assistant')}>
+              Спросить помощника <ArrowUpRight size={14} />
             </button>
           </div>
           <button className="help-button" onClick={() => setHelpOpen(true)}>
@@ -408,16 +417,20 @@ export default function App() {
             <div>
               <span className="eyebrow">РАБОЧЕЕ ПРОСТРАНСТВО / ЭЛЕКТРОКОМПЛЕКТ</span>
               <h1>
-                {view === 'quality'
-                  ? 'Проверка данных'
-                  : view === 'recommendations'
-                    ? 'План закупок'
-                    : 'Обзор склада'}
+                {view === 'assistant'
+                  ? 'ИИ-помощник'
+                  : view === 'quality'
+                    ? 'Проверка данных'
+                    : view === 'recommendations'
+                      ? 'План закупок'
+                      : 'Обзор склада'}
               </h1>
               <p>
-                {view === 'quality'
-                  ? 'Источники, ограничения и всё, что требует вашего внимания.'
-                  : 'Остатки, прогноз и закупки — всё перед вами.'}
+                {view === 'assistant'
+                  ? 'Ваш склад понятным языком. Спросите о цифрах или работе с сайтом.'
+                  : view === 'quality'
+                    ? 'Источники, ограничения и всё, что требует вашего внимания.'
+                    : 'Остатки, прогноз и закупки — всё перед вами.'}
               </p>
             </div>
             <div className="heading-actions">
@@ -489,7 +502,23 @@ export default function App() {
                   : 'НАБОР НЕ ВЫБРАН'}
             </span>
           </div>
-          {error && (
+          <div hidden={view !== 'assistant'}>
+            <Assistant
+              key={`${mode}-${dataset?.id || 'none'}-${run?.run_id || 'none'}`}
+              active={view === 'assistant'}
+              dataset={dataset}
+              run={run}
+              rows={rows}
+              scenario={scenario}
+              loading={loading || busy}
+              onProduct={setDetail}
+              onNavigate={(destination) => {
+                if (destination === 'scenario') setScenarioOpen(true);
+                else navigate(destination);
+              }}
+            />
+          </div>
+          {error && view !== 'assistant' && (
             <div className="error-box main-error" role="alert">
               <TriangleAlert size={23} />
               <div>
@@ -506,7 +535,7 @@ export default function App() {
               </div>
             </div>
           )}
-          {loading ? (
+          {view === 'assistant' ? null : loading ? (
             <div className="loading-view" role="status" aria-live="polite">
               <div className="skeleton-stats">
                 {[1, 2, 3, 4].map((i) => (
